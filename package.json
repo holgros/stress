@@ -1,0 +1,19 @@
+{
+  "name": "stress",
+  "version": "1.0.0",
+  "description": "Spelet stress i Node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "Holger",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.3",
+    "socket.io": "^4.4.1"
+  },
+  "engines": {
+    "node": "16.x"
+  }
+}
