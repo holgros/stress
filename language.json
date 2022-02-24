@@ -1,0 +1,14 @@
+[
+    {"language": "en",
+    "vocabulary": {
+        "***LANGUAGE***": "Language",
+        "***LINK_TO_ONLINE_APP***": "Link to online app"
+    }
+    },
+    {"language": "sv",
+    "vocabulary": {
+        "***LANGUAGE***": "Språk",
+        "***LINK_TO_ONLINE_APP***": "Länk till online-app"
+    }
+    }
+]
