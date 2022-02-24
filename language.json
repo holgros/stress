@@ -1,14 +1,22 @@
 [
     {"language": "en",
     "vocabulary": {
+        "***STRESS***": "Stress!",
         "***LANGUAGE***": "Language",
-        "***LINK_TO_ONLINE_APP***": "Link to online app"
+        "***LINK_TO_ONLINE_APP***": "Link to online app",
+        "***NAME***": "Name",
+        "***WRITE_YOUR_NAME***": "Write your name",
+        "***SUBMIT***": "Submit"
     }
     },
     {"language": "sv",
     "vocabulary": {
+        "***STRESS***": "Stress!",
         "***LANGUAGE***": "Språk",
-        "***LINK_TO_ONLINE_APP***": "Länk till online-app"
+        "***LINK_TO_ONLINE_APP***": "Länk till online-app",
+        "***NAME***": "Namn",
+        "***WRITE_YOUR_NAME***": "Skriv ditt namn",
+        "***SUBMIT***": "Skicka"
     }
     }
 ]
