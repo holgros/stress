@@ -20,7 +20,7 @@ app.use(sessions({
     secret: "thisismysecrctekeyfhrgfgrfrty84fwir767",
     saveUninitialized:true,
     cookie: { maxAge: oneHour },
-    resave: false 
+    resave: false
 }));
 let session;
 
@@ -29,8 +29,8 @@ app.get("/", (req, res) => {
     res.redirect("/sv");
 });
 app.get("/:lang", (req, res) => {
-    if (session) {
-        res.send(`Hej ${session.name}!`);
+    if (req.session.name) {
+        res.send(`Hej ${req.session.name}!`);
     }
     else {
         io.on("connect", (socket) => {
