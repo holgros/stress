@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
     res.redirect("/sv");
 });
 app.get("/:lang", (req, res) => {
-    if (req.params.lang == "logout") {
+    if (req.params.lang == "logout" || req.params.lang == "undefined") {
         let language = req.session.lang;
         req.session.destroy();
         res.redirect(`/${language}`);
