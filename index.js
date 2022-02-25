@@ -23,54 +23,105 @@ app.use(sessions({
     resave: false
 }));
 let session;
+let connections = []
 
 // default-språk är svenska
 app.get("/", (req, res) => {
-    res.redirect("/sv");
+    res.redirect("start/sv");
 });
-app.get("/:lang", (req, res) => {
+app.get("/start/:lang", (req, res) => {
     if (req.params.lang == "undefined") {
         res.redirect("/");
         return;
     }
-    if (req.params.lang == "logout") {
-        let language = req.session.lang;
-        req.session.destroy();
-        res.redirect(`/${language}`);
+    if (req.session.lang) {
+        res.redirect(`../welcome/${req.session.lang}`);
         return;
     }
     fs.readFile("language.json", "utf-8", (err, data) => {
-        if (req.session && req.session.name) {
-            fs.readFile("welcome.html", "utf-8", (err, html) => {
-                let output = getHtml(req.params.lang, data, html);
-                output = output.replace("---NAME---", req.session.name);
-                res.send(output);
-            });
-            /*
-            io.on("connect", (socket) => {
-                res.send(`Hej ${req.session.name}!`);
-            });
-            */
-        }
-        else {
-            fs.readFile("index.html", "utf-8", (err, html) => {
-                let output = getHtml(req.params.lang, data, html);
-                res.send(output);
-            });
-        }
+        fs.readFile("index.html", "utf-8", (err, html) => {
+            let output = getHtml(req.params.lang, data, html);
+            res.send(output);
+        });
     });
 });
 
 // starta session
-app.post("/:lang", (req, res) => {
-    session=req.session;
-    session.lang = req.params.lang;
-    session.name = req.body.inputName;
-    res.redirect(`/${req.params.lang}`);
+app.post("/start/:lang", (req, res) => {
+    if (!req.body.inputName.includes("*-*")) {
+        session=req.session;
+        session.lang = req.params.lang;
+        session.name = req.body.inputName;
+        session.time = Date.now();
+    }
+    res.redirect(`/welcome/${session.lang}`);
+});
+
+// logga ut
+app.get("/logout", (req, res) => {
+    let language = req.session.lang;
+    req.session.destroy();
+    res.redirect("/");
+});
+
+// inloggad
+app.get("/welcome/:lang", (req, res) => {
+    if (!req.session.name) {
+        res.redirect("/");
+        return;
+    }
+    fs.readFile("language.json", "utf-8", (err, data) => {
+        fs.readFile("welcome.html", "utf-8", (err, html) => {
+            let output = getHtml(req.params.lang, data, html);
+            output = output.replace("---NAME---", req.session.name);
+            res.send(output);
+            io.on("connect", (socket) => {
+                socket.myId = req.session.name + "*-*" + req.session.time;  // unikt id
+                let push = true;
+                for (let i = 0; i < connections.length; i++) {
+                    if (connections[i].myId == socket.myId) {
+                        push = false;
+                    }
+                }
+                if (push) {
+                    connections.push(socket);
+                }
+                socket.on("disconnect", () => {
+                    connections = connections.filter((value, index, arr) => { 
+                        return value != socket; // ta bort från connections
+                    });
+                });
+                if (connections.length > 1) {
+                    let opponent0 = connections[0].myId;
+                    let opponent1 = connections[1].myId;
+                    connections[1].emit("startGame", opponent0);
+                    connections[1].disconnect();
+                    connections[0].emit("startGame", opponent1);
+                    connections[0].disconnect();
+                }
+                console.log("Antal uppkopplade: " + connections.length);
+            });
+        });
+    });
+});
+
+// starta spelet
+app.get("/game", (req, res) => {
+    if (req.query.opponent) {
+        req.session.opponent = req.query.opponent;
+        console.log(req.session);
+        res.redirect("/game");
+        return;
+    }
+    if (!req.session.opponent) {
+        res.redirect("/");
+        return;
+    }
+    res.send(`Succé! Du spelar mot ${req.session.opponent}!`);
 });
 
 /*
-interna funktioner
+hjälp-funktioner
 */
 
 // hämta html i aktuellt språk
