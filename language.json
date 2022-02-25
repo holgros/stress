@@ -6,7 +6,10 @@
         "***LINK_TO_ONLINE_APP***": "Link to online app",
         "***NAME***": "Name",
         "***WRITE_YOUR_NAME***": "Write your name",
-        "***SUBMIT***": "Submit"
+        "***SUBMIT***": "Submit",
+        "***WELCOME***": "Welcome",
+        "***WAIT***": "Waiting for an opponent to connect...",
+        "***LOG_OUT***": "Log out"
     }
     },
     {"language": "sv",
@@ -16,7 +19,10 @@
         "***LINK_TO_ONLINE_APP***": "Länk till online-app",
         "***NAME***": "Namn",
         "***WRITE_YOUR_NAME***": "Skriv ditt namn",
-        "***SUBMIT***": "Skicka"
+        "***SUBMIT***": "Skicka",
+        "***WELCOME***": "Välkommen",
+        "***WAIT***": "Väntar på att en motståndare ska ansluta sig...",
+        "***LOG_OUT***": "Logga ut"
     }
     }
 ]

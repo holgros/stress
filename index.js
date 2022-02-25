@@ -29,20 +29,32 @@ app.get("/", (req, res) => {
     res.redirect("/sv");
 });
 app.get("/:lang", (req, res) => {
-    if (req.session.name) {
-        res.send(`Hej ${req.session.name}!`);
+    if (req.params.lang == "logout") {
+        let language = req.session.lang;
+        req.session.destroy();
+        res.redirect(`/${language}`);
+        return;
     }
-    else {
-        io.on("connect", (socket) => {
-            console.log("Connected!");
-        });
-        fs.readFile("language.json", "utf-8", (err, data) => {
+    fs.readFile("language.json", "utf-8", (err, data) => {
+        if (req.session && req.session.name) {
+            fs.readFile("welcome.html", "utf-8", (err, html) => {
+                let output = getHtml(req.params.lang, data, html);
+                output = output.replace("---NAME---", req.session.name);
+                res.send(output);
+            });
+            /*
+            io.on("connect", (socket) => {
+                res.send(`Hej ${req.session.name}!`);
+            });
+            */
+        }
+        else {
             fs.readFile("index.html", "utf-8", (err, html) => {
                 let output = getHtml(req.params.lang, data, html);
                 res.send(output);
             });
-        });
-    }
+        }
+    });
 });
 
 // starta session
