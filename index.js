@@ -30,17 +30,19 @@ app.get("/", (req, res) => {
 });
 app.get("/:lang", (req, res) => {
     if (session) {
-        console.log(session.name);
+        res.send(`Hej ${session.name}!`);
     }
-    io.on("connect", (socket) => {
-        console.log("Connected!");
-    });
-    fs.readFile("language.json", "utf-8", (err, data) => {
-        fs.readFile("index.html", "utf-8", (err, html) => {
-            let output = getHtml(req.params.lang, data, html);
-            res.send(output);
+    else {
+        io.on("connect", (socket) => {
+            console.log("Connected!");
         });
-    });
+        fs.readFile("language.json", "utf-8", (err, data) => {
+            fs.readFile("index.html", "utf-8", (err, html) => {
+                let output = getHtml(req.params.lang, data, html);
+                res.send(output);
+            });
+        });
+    }
 });
 
 // starta session
