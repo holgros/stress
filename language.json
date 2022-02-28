@@ -9,7 +9,8 @@
         "***SUBMIT***": "Submit",
         "***WELCOME***": "Welcome",
         "***WAIT***": "Waiting for an opponent to connect...",
-        "***LOG_OUT***": "Log out"
+        "***LOG_OUT***": "Log out",
+        "***VS***": "vs."
     }
     },
     {"language": "sv",
@@ -22,7 +23,8 @@
         "***SUBMIT***": "Skicka",
         "***WELCOME***": "Välkommen",
         "***WAIT***": "Väntar på att en motståndare ska ansluta sig...",
-        "***LOG_OUT***": "Logga ut"
+        "***LOG_OUT***": "Logga ut",
+        "***VS***": "mot"
     }
     }
 ]

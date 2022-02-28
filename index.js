@@ -70,6 +70,7 @@ app.get("/welcome/:lang", (req, res) => {
         res.redirect("/");
         return;
     }
+    req.session.language = req.params.lang;
     fs.readFile("language.json", "utf-8", (err, data) => {
         fs.readFile("welcome.html", "utf-8", (err, html) => {
             let output = getHtml(req.params.lang, data, html);
@@ -92,12 +93,15 @@ app.get("/welcome/:lang", (req, res) => {
                     });
                 });
                 if (connections.length > 1) {
-                    let opponent0 = connections[0].myId;
-                    let opponent1 = connections[1].myId;
-                    connections[1].emit("startGame", opponent0);
-                    connections[1].disconnect();
-                    connections[0].emit("startGame", opponent1);
-                    connections[0].disconnect();
+                    let conn0 = connections[0];
+                    let conn1 = connections[1];
+                    conn1.emit("startGame", conn0.myId);
+                    conn1.disconnect();
+                    conn0.emit("startGame", conn1.myId);
+                    conn0.disconnect();
+                    connections = connections.filter((value, index, arr) => {
+                        return value != conn0 && value != conn1; // ta bort från connections
+                    });
                 }
                 console.log("Antal uppkopplade: " + connections.length);
             });
@@ -107,6 +111,7 @@ app.get("/welcome/:lang", (req, res) => {
 
 // starta spelet
 app.get("/game", (req, res) => {
+    /*
     if (req.query.opponent) {
         req.session.opponent = req.query.opponent;
         console.log(req.session);
@@ -117,7 +122,20 @@ app.get("/game", (req, res) => {
         res.redirect("/");
         return;
     }
-    res.send(`Succé! Du spelar mot ${req.session.opponent}!`);
+    */
+    req.session.opponent = "Firefox*-*1645990401188!";  // MOCK
+    req.session.name = "Chrome*-*1645990389929!";       // MOCK
+    req.session.language = "sv";                        // MOCK
+    fs.readFile("game.html", "utf-8", (err, htmlData) => {
+        let playerId = req.session.name;
+        let opponentId = req.session.opponent;
+        let html = htmlData.replace("---NAME---", playerId.split("*-*")[0]);
+        html = html.replace("---OPPONENT---", opponentId.split("*-*")[0]);
+        fs.readFile("language.json", "utf-8", (jsonErr, jsonData) => {
+            html = getHtml(req.session.language, jsonData, html);
+            res.send(html);
+        });
+    });
 });
 
 /*
