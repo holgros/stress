@@ -12,3 +12,70 @@ span {
     display: table-cell;
     vertical-align: middle;
 }
+
+#header {
+    display: none;
+}
+
+#game {
+    font-size: 4em;
+    margin-top: 1%;
+    text-align: center;
+}
+
+.counter {
+    font-size: 25%;
+    margin-top: -20px;
+}
+
+@media (min-height: 481px) {
+
+    #header {
+        display: block;
+    }
+
+    .icon {
+        display: none;
+    }
+
+    #hamburgerHeader {
+        display: none;
+    }
+
+    #game {
+        font-size: 5em;
+    }
+
+    .counter {
+        margin-top: -25px;
+    }
+}
+
+#quit {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+}
+
+.modal {
+    display: none;
+}
+
+.icon {
+    background: white;
+    position: fixed;
+    right: 5px;
+    top: 5px;
+  }
+
+.float {
+    float: left;
+}
+
+.clear {
+    clear: left;
+}
+
+.col-20 {
+    width: 20%;
+}

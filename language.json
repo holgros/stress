@@ -10,7 +10,10 @@
         "***WELCOME***": "Welcome",
         "***WAIT***": "Waiting for an opponent to connect...",
         "***LOG_OUT***": "Log out",
-        "***VS***": "vs."
+        "***VS***": "vs.",
+        "***QUIT***": "Quit",
+        "***CONFIRM-QUIT***": "Abort game and exit?",
+        "***BACK***": "Back"
     }
     },
     {"language": "sv",
@@ -24,7 +27,10 @@
         "***WELCOME***": "Välkommen",
         "***WAIT***": "Väntar på att en motståndare ska ansluta sig...",
         "***LOG_OUT***": "Logga ut",
-        "***VS***": "mot"
+        "***VS***": "mot",
+        "***QUIT***": "Avsluta",
+        "***CONFIRM-QUIT***": "Avbryt spelet och börja om?",
+        "***BACK***": "Tillbaka"
     }
     }
 ]

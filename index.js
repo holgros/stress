@@ -111,7 +111,7 @@ app.get("/welcome/:lang", (req, res) => {
 
 // starta spelet
 app.get("/game", (req, res) => {
-    /*
+    /* UNCOMMENT AFTER TESTING!!
     if (req.query.opponent) {
         req.session.opponent = req.query.opponent;
         console.log(req.session);
@@ -129,8 +129,8 @@ app.get("/game", (req, res) => {
     fs.readFile("game.html", "utf-8", (err, htmlData) => {
         let playerId = req.session.name;
         let opponentId = req.session.opponent;
-        let html = htmlData.replace("---NAME---", playerId.split("*-*")[0]);
-        html = html.replace("---OPPONENT---", opponentId.split("*-*")[0]);
+        let html = htmlData.replaceAll("---NAME---", playerId.split("*-*")[0]);
+        html = html.replaceAll("---OPPONENT---", opponentId.split("*-*")[0]);
         fs.readFile("language.json", "utf-8", (jsonErr, jsonData) => {
             html = getHtml(req.session.language, jsonData, html);
             res.send(html);
@@ -151,7 +151,7 @@ let getHtml = (targetLanguage, jsonData, htmlData) => {
     if (lang.length > 0) {
         let vocabulary = lang[0].vocabulary;
         for (let key in vocabulary) {
-            htmlData = htmlData.replace(key, vocabulary[key]);
+            htmlData = htmlData.replaceAll(key, vocabulary[key]);
         }
     }
     return htmlData;
