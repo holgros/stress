@@ -56,6 +56,7 @@ app.post("/start/:lang", (req, res) => {
         session.lang = req.params.lang;
         session.name = req.body.inputName;
         session.time = Date.now();
+        session.requestGame = true;
     }
     res.redirect(`/welcome/${session.lang}`);
 });
@@ -80,6 +81,7 @@ app.get("/welcome/:lang", (req, res) => {
             output = output.replace("---NAME---", req.session.name);
             res.send(output);
             io.on("connect", (socket) => {
+                if (!req.session.requestGame) return;
                 socket.myId = req.session.name + "*-*" + req.session.time;  // unikt id
                 let push = true;
                 for (let i = 0; i < connections.length; i++) {
@@ -106,30 +108,31 @@ app.get("/welcome/:lang", (req, res) => {
                         return value != conn0 && value != conn1; // ta bort från connections
                     });
                 }
-                console.log("Antal uppkopplade: " + connections.length);
+                //console.log("Antal uppkopplade: " + connections.length);
             });
         });
     });
 });
 
+app.get("/getopponent", (req, res) => {
+    req.session.opponent = req.query.opponent;
+    req.session.requestGame = false;
+    console.log(req.session);
+    console.log(req.query.opponent);
+    res.redirect("/game");
+});
+
 // starta spelet
 app.get("/game", (req, res) => {
-    /* UNCOMMENT AFTER TESTING!!
-    if (req.query.opponent) {
-        req.session.opponent = req.query.opponent;
-        console.log(req.session);
-        res.redirect("/game");
-        return;
-    }
+    //req.session.opponent = "Firefox*-*1645990401188!";  // MOCK
+    //req.session.name = "Chrome*-*1645990389929!";       // MOCK
+    //req.session.language = "sv";                        // MOCK
     if (!req.session.opponent) {
+        req.session.destroy();
         res.redirect("/");
         return;
     }
-    */
     let game = new Game();
-    req.session.opponent = "Firefox*-*1645990401188!";  // MOCK
-    req.session.name = "Chrome*-*1645990389929!";       // MOCK
-    req.session.language = "sv";                        // MOCK
     fs.readFile("game.html", "utf-8", (err, htmlData) => {
         let playerId = req.session.name;
         let opponentId = req.session.opponent;
@@ -137,7 +140,14 @@ app.get("/game", (req, res) => {
         html = html.replaceAll("---OPPONENT---", opponentId.split("*-*")[0]);
         fs.readFile("language.json", "utf-8", (jsonErr, jsonData) => {
             html = getHtml(req.session.language, jsonData, html);
+            io.on("connect", (socket) => {
+                console.log("Connected!");
+            });
             res.send(html);
+            io.on("connect", (socket) => {
+                socket.myId = req.session.name + "*-*" + req.session.time;  // unikt id
+                console.log(`socket.myId=${socket.myId}`);
+            });
         });
     });
 });

@@ -1,13 +1,41 @@
 module.exports = class Game {
     constructor() {
-        this.deck = getDeck();
-        console.log(this.deck);
+        let deck = getDeck();
+        this.player1 = {
+            deck: [], 
+            visible: []
+        };
+        this.player2 = {
+            deck: [], 
+            visible: []
+        };
+        for (let playerDeck of [this.player1.deck, this.player2.deck]) {
+            for (let i = 0; i < 26; i++) {
+                playerDeck.push(deck.pop());
+            }
+        }
+        for (let player of [this.player1, this.player2]) {
+            for (let i = 0; i < 4; i++) {
+                let card = player.deck.pop();
+                while (includesRank(player.visible, card)) {
+                    player.visible.push(card);
+                    card = player.deck.pop();
+                }
+                player.visible.push(card);
+            }
+        }
+        /*
+        console.log("Player 1:");
+        console.log(this.player1);
+        console.log("Player 2:");
+        console.log(this.player2);
+        */
     }
 }
 
 class Card {
     constructor(suit, value, unicode) {
-        this.suit = suit;
+        this.suit = suit;   // "H", "C", "S" eller "D"
         this.value = value; // nollindexerad, dvs. 0=ess och 12=kung
         this.unicode = unicode;
     }
@@ -50,4 +78,14 @@ let getDeck = (deck) => {
     }
     myDeck = shuffle(myDeck);
     return myDeck;
+}
+
+// kolla om kort av samma värde redan finns
+let includesRank = (deck, card) => {
+    for (let c of deck) {
+        if (card.value == c.value) {
+            return true;
+        }
+    }
+    return false;
 }

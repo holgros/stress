@@ -1,12 +1,5 @@
 let socket = io();
 
-socket.on("startGame", (opponent) => {
-    //console.log("Starting game...");
-    //window.location.replace(`/game?opponent=${opponent}`);
-    window.location.replace(`/getopponent?opponent=${opponent}`);
-});
-
-/*
 window.onload = () => {
     let clickListener = () => {
         let confirmDialog = document.getElementById("quitConfirm");
@@ -29,4 +22,3 @@ window.onload = () => {
     let icon = document.getElementsByClassName("icon")[0];
     icon.addEventListener("click", clickListener);
 };
-*/

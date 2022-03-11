@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="/socket.io/socket.io.js"></script> <!-- routas till en sökväg på vär egen dator, där vi har installerat socket.io -->
-    <script src="../klientskript.js"></script>
+    <script src="../gameclient.js"></script>
     <link rel="stylesheet" href="../style.css">
 </head>
 <body>
@@ -49,15 +49,15 @@
   <div id="game">
     
     <div id="opponent">
-      <div class="float col-20">&#x1F0BB</div>
-      <div class="float col-20">&#x1F0CB</div>
-      <div class="float col-20">&#x1F0DB</div>
-      <div class="float col-20">&#x1F0AB</div>
+      <div class="float col-20">&#x1F0BB<div class="counter"></div></div>
+      <div class="float col-20">&#x1F0CB<div class="counter"></div></div>
+      <div class="float col-20">&#x1F0DB<div class="counter"></div></div>
+      <div class="float col-20">&#x1F0AB<div class="counter"></div></div>
       <div class="float col-20">&#x1F0A0<div class="counter">52</div></div>
     </div>
 
     <div id="deck">
-      <div class="float clear col-20">&#x1F0A0<div class="counter">52</div></div>
+      <div class="float clear col-20">Ready?</div>
       <div class="float col-20">&#x1F0A0<div class="counter">52</div></div>
       <div class="float col-20">&#x1F0A0<div class="counter">52</div></div>
     </div>
