@@ -23,7 +23,10 @@ app.use(sessions({
     resave: false
 }));
 let session;
-let connections = []
+let connections = [];
+
+// importera klassen Game
+const Game = require("./Game.js");
 
 // default-språk är svenska
 app.get("/", (req, res) => {
@@ -123,6 +126,7 @@ app.get("/game", (req, res) => {
         return;
     }
     */
+    let game = new Game();
     req.session.opponent = "Firefox*-*1645990401188!";  // MOCK
     req.session.name = "Chrome*-*1645990389929!";       // MOCK
     req.session.language = "sv";                        // MOCK
