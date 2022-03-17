@@ -10,9 +10,11 @@
   "author": "Holger",
   "license": "ISC",
   "dependencies": {
+    "connect-redis": "^6.1.2",
     "cookie-parser": "^1.4.6",
     "express": "^4.17.3",
     "express-session": "^1.17.2",
+    "redis": "^4.0.4",
     "socket.io": "^4.4.1"
   },
   "engines": {

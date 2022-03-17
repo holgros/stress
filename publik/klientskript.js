@@ -1,10 +1,17 @@
-let socket = io();
+window.onload = () => {
 
-socket.on("startGame", (opponent) => {
-    //console.log("Starting game...");
-    //window.location.replace(`/game?opponent=${opponent}`);
-    window.location.replace(`/getopponent?opponent=${opponent}`);
-});
+    let socket = io();
+    let id = document.head.querySelector("[name~=playerId][content]").content;
+    //console.log(id);
+    socket.emit("gameRequest", id);
+
+    socket.on("startGame", (playerId) => {
+        //window.location.replace(`/game?opponent=${opponent}`);
+        //console.log(opponent);
+        window.location.replace(`/getopponent?playerId=${playerId}`);
+    });
+
+};
 
 /*
 window.onload = () => {

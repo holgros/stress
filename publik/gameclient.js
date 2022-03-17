@@ -1,4 +1,3 @@
-let socket = io();
 
 window.onload = () => {
     let clickListener = () => {
@@ -21,4 +20,10 @@ window.onload = () => {
 
     let icon = document.getElementsByClassName("icon")[0];
     icon.addEventListener("click", clickListener);
+
+    let socket = io();
+    let id = document.head.querySelector("[name~=playerId][content]").content;
+    //console.log(id);
+    socket.emit("startGame", id);
+
 };

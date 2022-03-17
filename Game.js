@@ -1,14 +1,18 @@
 module.exports = class Game {
-    constructor() {
+    constructor(name1, name2) {
         let deck = getDeck();
         this.player1 = {
+            name: name1,
             deck: [], 
             visible: []
         };
         this.player2 = {
+            name: name2,
             deck: [], 
             visible: []
         };
+        this.face1 = [];
+        this.face2 = [];
         for (let playerDeck of [this.player1.deck, this.player2.deck]) {
             for (let i = 0; i < 26; i++) {
                 playerDeck.push(deck.pop());
@@ -24,13 +28,25 @@ module.exports = class Game {
                 player.visible.push(card);
             }
         }
-        /*
-        console.log("Player 1:");
-        console.log(this.player1);
-        console.log("Player 2:");
-        console.log(this.player2);
-        */
+        this.players = {
+            name1: this.player1.name,
+            name2: this.player2.name
+        }
     }
+
+    nextFaces = () => {
+        if (this.player1.deck.length + this.player2.deck.length < 2) {
+            // TODO: Aktivera handpåläggning
+        }
+        let card;
+        if (this.player1.deck.length > 0) card = this.player1.deck.pop();
+        else card = this.player2.pop();
+        this.face1.push(card);
+        if (this.player2.deck.length > 0) card = this.player2.deck.pop();
+        else card = this.player1.pop();
+        this.face2.push(card);
+    };
+
 }
 
 class Card {
