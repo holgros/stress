@@ -47,6 +47,30 @@ module.exports = class Game {
         this.face2.push(card);
     };
 
+    // returnera den information som kan ses av spelarna
+    getInfo = (id) => {
+        let visible = {
+            nbrFace1: this.face1.length,
+            nbrFace2: this.face2.length
+        }
+        let player = this.player2;
+        let opponent = this.player1;
+        if (this.player1 == id) {
+            player = this.player1;
+            opponent = this.player2;
+        }
+        visible.playerVisible = player.visible;
+        visible.opponentVisible = opponent.visible;
+        visible.nbrPlayerDeck = player.deck.length;
+        visible.nbrOpponentDeck = opponent.deck.length;
+        return visible;
+    }
+
+    standoff = () => {
+        // TODO: Returnera true ifall inget kort kan läggas
+        return false;
+    }
+
 }
 
 class Card {

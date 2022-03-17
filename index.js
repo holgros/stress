@@ -1,3 +1,5 @@
+const mock = false;  // FALSE VID DEPLOYMENT
+
 const express = require("express");
 const fs = require("fs");
 const app = express();
@@ -72,9 +74,7 @@ app.get("/welcome/:lang", (req, res) => {
         else res.redirect("/");
         return;
     }
-    console.log(req.session);
     if (req.session.playerId && isPlayer(req.session.playerId)) {
-        console.log("Återupptar!");
         res.redirect("/game");  // återuppta spel för spelare med matchande session
         return;
     }
@@ -103,22 +103,27 @@ app.get("/getopponent", (req, res) => {
 
 // starta spel
 app.get("/game", (req, res) => {
-    //req.session.opponent = "Firefox*-*1645990401188!";  // MOCK
-    //req.session.name = "Chrome*-*1645990389929!";       // MOCK
-    //req.session.language = "sv";                        // MOCK
+    
+    /* TA BORT VID DEPLOYMENT */
+    if (mock) {
+    req.session.opponent = "Firefox*-*" + Date.now();   // MOCK
+    req.session.playerId = "Chrome*-*" + Date.now();    // MOCK
+    req.session.playerName = "Chrome";                  // MOCK
+    req.session.lang = "sv";                            // MOCK
+    }
+    /* TA BORT VID DEPLOYMENT */
+
     if (!req.session.opponent) {
         req.session.destroy();
         res.redirect("/");
         return;
     }
-    let playerId = req.session.playerId;
-    let gamesIndex = getGamesIndex(playerId, req.session.opponent);
     fs.readFile("game.html", "utf-8", (err, htmlData) => {
         let playerName = req.session.playerName;
         let opponentId = req.session.opponent;
         let html = htmlData.replaceAll("---NAME---", playerName);
         html = html.replaceAll("---OPPONENT---", opponentId.split("*-*")[0]);
-        html = html.replace("PLAYER_ID", req.session.playerName + "*-*" + req.session.requestTime);
+        html = html.replace("PLAYER_ID", req.session.playerId);
         fs.readFile("language.json", "utf-8", (jsonErr, jsonData) => {
             html = getHtml(req.session.lang, jsonData, html);
             res.send(html);
@@ -159,13 +164,23 @@ let getGamesIndex = (id1, id2) => {
     return games.length - 1;
 }
 
+// överlagrad version av ovanstående - används när motståndarens id är okänt, t.ex. när man direkt går in på games-sidan
+let getGamesIndexOverloaded = (id) => {
+    for (let i = 0; i < games.length; i++) {
+        if (games[i].player1.name == id || games[i].player2.name == id) {
+            return i;
+        }
+    }
+    return undefined;
+}
+
 // avgöra om spelare redan har startat ett spel
 let isPlayer = (id) => {
     for (let i = 0; i < games.length; i++) {
         if (games[i].player1.name == id || games[i].player2.name == id) return true;
     }
     return false;
-} 
+}
 
 // socket-hanterare
 io.on("connect", (socket) => {
@@ -181,10 +196,10 @@ io.on("connect", (socket) => {
             tempMatchings[conn0.playerId] = conn1.playerId;
             tempMatchings[conn1.playerId] = conn0.playerId;
             conn1.emit("startGame", conn1.playerId);
-            //console.log("Started game for " + conn1.playerId + " with opponent " + conn0.playerId);
+            console.log("Started game for " + conn1.playerId + " with opponent " + conn0.playerId);
             conn1.disconnect();
             conn0.emit("startGame", conn0.playerId);
-            //console.log("Started game for " + conn0.playerId + " with opponent " + conn1.playerId);
+            console.log("Started game for " + conn0.playerId + " with opponent " + conn1.playerId);
             conn0.disconnect();
             gameRequests = gameRequests.filter((value, index, arr) => {
                 return value != conn0 && value != conn1; // ta bort från connections
@@ -201,13 +216,21 @@ io.on("connect", (socket) => {
 
     // när spel startas
     socket.on("startGame", (playerId) => {
-        //console.log("Game started for " + playerId);
         let opponentId = tempMatchings[playerId];
-        delete tempMatchings[playerId];
-        let gameId = getGamesIndex(playerId, opponentId);
+        let gameId;
+        if (opponentId) {
+            delete tempMatchings[playerId];
+            gameId = getGamesIndex(playerId, opponentId);
+        }
+        else gameId = getGamesIndexOverloaded(playerId);
+        if (gameId == undefined) socket.emit("error", {type: "gameNotFound"});
         let game = games[gameId];
-        if (game.face1.length == 0) game.nextFaces();
-        console.log(game);
+        let gameInfo = game.getInfo(playerId);
+        socket.emit("updateGame", gameInfo);
+        if (game.face1.length == 0 || game.standoff()) {
+            // TODO: Hantera kortläggning på trådsäkert sätt
+            //game.nextFaces();
+        }
     });
 
 });
