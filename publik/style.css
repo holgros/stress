@@ -6,6 +6,7 @@
 
 body {
     background-color: lightgrey;
+    user-select: none;
 }
 
 span {

@@ -57,7 +57,7 @@ module.exports = class Game {
         }
         let player = this.player2;
         let opponent = this.player1;
-        if (this.player1 == id) {
+        if (this.player1.name == id) {
             player = this.player1;
             opponent = this.player2;
         }
@@ -73,8 +73,17 @@ module.exports = class Game {
     }
 
     standoff = () => {
-        // TODO: Returnera true ifall inget kort kan läggas
-        return false;
+        let face1Value = this.face1[this.face1.length-1].value;
+        let face2Value = this.face2[this.face2.length-1].value;
+        for (let playerVisible of [this.player1.visible, this.player2.visible]) {
+            for (let card of playerVisible) {
+                if (Math.abs(card.value - face1Value) == 1 || 
+                Math.abs(card.value - face2Value) == 1 ||
+                Math.abs(card.value - face1Value) == 12 || 
+                Math.abs(card.value - face2Value) == 12) return false;
+            }
+        }
+        return true;
     }
 
     sortByValue = (deck) => {

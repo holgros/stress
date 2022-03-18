@@ -105,7 +105,7 @@ app.get("/getopponent", (req, res) => {
 
 // starta spel
 app.get("/game", (req, res) => {
-    
+
     /* TA BORT VID DEPLOYMENT */
     if (mock) {
     req.session.opponent = MOCKOPPONENT;                // MOCK
@@ -113,8 +113,8 @@ app.get("/game", (req, res) => {
     req.session.playerName = "Chrome";                  // MOCK
     req.session.lang = "sv";                            // MOCK
     }
-    /* TA BORT VID DEPLOYMENT */
 
+    /* TA BORT VID DEPLOYMENT */
     if (!req.session.opponent) {
         req.session.destroy();
         res.redirect("/");
@@ -237,7 +237,8 @@ io.on("connect", (socket) => {
             // TODO: Hantera kortläggning på trådsäkert sätt
             game.nextFaces();
         }
-        gameInfo = game.getInfo();
+        console.log("Standoff: " + game.standoff());
+        gameInfo = game.getInfo(playerId);
         socket.emit("wait", TIMEOUTMILLISECONDS);
         setTimeout(() => {
             socket.emit("updateGame", gameInfo);

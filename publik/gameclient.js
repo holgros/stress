@@ -24,8 +24,13 @@ window.onload = () => {
     let socket = io();
 
     let id = document.head.querySelector("[name~=playerId][content]").content;
-    //console.log(id);
     
+    let player = document.getElementById("player");
+    let playerVisible = player.getElementsByClassName("col-20");
+    for (let i = 0; i < playerVisible.length; i++) {
+        
+    }
+
     socket.emit("startGame", id);
     
     socket.on("updateGame", (info) => {
@@ -36,8 +41,6 @@ window.onload = () => {
         let opponent = document.getElementById("opponent");
         let opponentVisible = opponent.getElementsByClassName("col-20");
         placeCards(opponentVisible, info.opponentVisible);
-        let player = document.getElementById("player");
-        let playerVisible = player.getElementsByClassName("col-20");
         placeCards(playerVisible, info.playerVisible);
         if (info.face1 && info.face2) {
             let face1 = document.getElementById("face1");
@@ -69,7 +72,6 @@ window.onload = () => {
                 wait.style.display = "none";
                 clearInterval(myInterval);
             }
-            console.log(i);
         }, timeInterval);
     });
 
