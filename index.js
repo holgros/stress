@@ -1,6 +1,6 @@
 const mock = true;  // FALSE VID DEPLOYMENT
 const MOCKOPPONENT = "Firefox*-*" + Date.now();
-const TIMEOUTMILLISECONDS = 300;
+const TIMEOUTMILLISECONDS = 3000;
 
 const express = require("express");
 const fs = require("fs");
@@ -239,7 +239,7 @@ io.on("connect", (socket) => {
         }
         gameInfo = game.getInfo();
         socket.emit("wait", TIMEOUTMILLISECONDS);
-        setTimeout(function() {
+        setTimeout(() => {
             socket.emit("updateGame", gameInfo);
             game.waiting = false;
         }, TIMEOUTMILLISECONDS);

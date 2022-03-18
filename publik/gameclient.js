@@ -58,11 +58,19 @@ window.onload = () => {
 
     socket.on("wait", (milliseconds) => {
         let wait = document.getElementById("wait");
-        wait.style.display = "block";
-        // TODO: tick down!!
-        setTimeout(function() {
-            wait.style.display = "none";
-        }, milliseconds);
+        wait.setAttribute("style", "inner-height:" + window.innerHeight);
+        let timeInterval = Math.round(milliseconds/3);
+        let i = 3;
+        wait.innerHTML = i;
+        let myInterval = setInterval(() => {
+            i--;
+            wait.innerHTML = i;
+            if (i == 0) {
+                wait.style.display = "none";
+                clearInterval(myInterval);
+            }
+            console.log(i);
+        }, timeInterval);
     });
 
 };

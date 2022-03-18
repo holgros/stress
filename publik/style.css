@@ -49,6 +49,12 @@ span {
     .counter {
         margin-top: -25px;
     }
+
+    /*
+    #wait {
+        line-height: 481px;
+    }
+    */
 }
 
 #quit {
@@ -89,5 +95,8 @@ span {
     left: 10%;
     top: 10%;
     background: rgba(255,0,0,0.5);
-    display: none;
+    color: purple;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
