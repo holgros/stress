@@ -237,7 +237,7 @@ io.on("connect", (socket) => {
             // TODO: Hantera kortläggning på trådsäkert sätt
             game.nextFaces();
         }
-        console.log("Standoff: " + game.standoff());
+        //console.log("Standoff: " + game.standoff());
         gameInfo = game.getInfo(playerId);
         socket.emit("wait", TIMEOUTMILLISECONDS);
         setTimeout(() => {
