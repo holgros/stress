@@ -1,4 +1,6 @@
-const mock = false;  // FALSE VID DEPLOYMENT
+const mock = true;  // FALSE VID DEPLOYMENT
+const MOCKOPPONENT = "Firefox*-*" + Date.now();
+const TIMEOUTMILLISECONDS = 300;
 
 const express = require("express");
 const fs = require("fs");
@@ -106,7 +108,7 @@ app.get("/game", (req, res) => {
     
     /* TA BORT VID DEPLOYMENT */
     if (mock) {
-    req.session.opponent = "Firefox*-*" + Date.now();   // MOCK
+    req.session.opponent = MOCKOPPONENT;                // MOCK
     req.session.playerId = "Chrome*-*" + Date.now();    // MOCK
     req.session.playerName = "Chrome";                  // MOCK
     req.session.lang = "sv";                            // MOCK
@@ -171,6 +173,10 @@ let getGamesIndexOverloaded = (id) => {
             return i;
         }
     }
+    if (mock) {
+        games.push(new Game(id, MOCKOPPONENT));
+        return games.length - 1;
+    }
     return undefined;
 }
 
@@ -223,14 +229,20 @@ io.on("connect", (socket) => {
             gameId = getGamesIndex(playerId, opponentId);
         }
         else gameId = getGamesIndexOverloaded(playerId);
-        if (gameId == undefined) socket.emit("error", {type: "gameNotFound"});
+        if (gameId == undefined) socket.emit("error", {type: "GameNotFound"});
         let game = games[gameId];
         let gameInfo = game.getInfo(playerId);
         socket.emit("updateGame", gameInfo);
         if (game.face1.length == 0 || game.standoff()) {
             // TODO: Hantera kortläggning på trådsäkert sätt
-            //game.nextFaces();
+            game.nextFaces();
         }
+        gameInfo = game.getInfo();
+        socket.emit("wait", TIMEOUTMILLISECONDS);
+        setTimeout(function() {
+            socket.emit("updateGame", gameInfo);
+            game.waiting = false;
+        }, TIMEOUTMILLISECONDS);
     });
 
 });

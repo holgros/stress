@@ -29,10 +29,6 @@ window.onload = () => {
     socket.emit("startGame", id);
     
     socket.on("updateGame", (info) => {
-        let nbrFace1 = document.getElementById("nbrFace1");
-        nbrFace1.innerHTML = info.nbrFace1;
-        let nbrFace2 = document.getElementById("nbrFace2");
-        nbrFace2.innerHTML = info.nbrFace2;
         let nbrOpponent = document.getElementById("nbrOpponent");
         nbrOpponent.innerHTML = info.nbrOpponentDeck;
         let nbrPlayer = document.getElementById("nbrPlayer");
@@ -40,19 +36,49 @@ window.onload = () => {
         let opponent = document.getElementById("opponent");
         let opponentVisible = opponent.getElementsByClassName("col-20");
         placeCards(opponentVisible, info.opponentVisible);
+        let player = document.getElementById("player");
+        let playerVisible = player.getElementsByClassName("col-20");
+        placeCards(playerVisible, info.playerVisible);
+        if (info.face1 && info.face2) {
+            let face1 = document.getElementById("face1");
+            face1.innerHTML = info.face1.unicode + `<div class="counter" id="nbrFace1"></div>`;
+            let face2 = document.getElementById("face2");
+            face2.innerHTML = info.face2.unicode + `<div class="counter" id="nbrFace2"></div>`;
+        }
+        let nbrFace1 = document.getElementById("nbrFace1");
+        nbrFace1.innerHTML = info.nbrFace1;
+        let nbrFace2 = document.getElementById("nbrFace2");
+        nbrFace2.innerHTML = info.nbrFace2;
     });
 
     socket.on("error", (data) => {
-        alert(data.type);
+        alert("Error: " + data.type);
         window.location.replace(`/logout`);
+    });
+
+    socket.on("wait", (milliseconds) => {
+        let wait = document.getElementById("wait");
+        wait.style.display = "block";
+        // TODO: tick down!!
+        setTimeout(function() {
+            wait.style.display = "none";
+        }, milliseconds);
     });
 
 };
 
-// placera synliga kort
+// placera synliga kort - korten förutsätts vara sorterade efter valör
 let placeCards = (divs, deck) => {
-    for (let i = 0; i < divs.length - 1; i++) {
-        // TODO: hantera case med fler än ett kort av samma valör
-        divs[i].innerHTML = `${deck[i].unicode}<div class="counter">`;
+    let multiValues = [1, 1, 1, 1];
+    let j = 0;
+    for (let i = 0; i < deck.length; i++) {
+        let card = deck[i];
+        if (i == 0 || deck[i-1].value != card.value) {
+            divs[i+j].innerHTML = `${card.unicode}<div class="counter"></div>`;
+            continue;
+        }
+        j--;
+        multiValues[i+j]++;
+        divs[i+j].innerHTML = `${card.unicode}<div class="counter">${multiValues[i+j]}</div>`;
     }
 }

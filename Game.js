@@ -27,11 +27,13 @@ module.exports = class Game {
                 }
                 player.visible.push(card);
             }
+            player.visible = this.sortByValue(player.visible);
         }
         this.players = {
             name1: this.player1.name,
             name2: this.player2.name
         }
+        this.waiting = true;
     }
 
     nextFaces = () => {
@@ -63,12 +65,20 @@ module.exports = class Game {
         visible.opponentVisible = opponent.visible;
         visible.nbrPlayerDeck = player.deck.length;
         visible.nbrOpponentDeck = opponent.deck.length;
+        if (this.face1 && this.face2) {
+            visible.face1 = this.face1[this.face1.length-1];
+            visible.face2 = this.face2[this.face2.length-1];
+        }
         return visible;
     }
 
     standoff = () => {
         // TODO: Returnera true ifall inget kort kan läggas
         return false;
+    }
+
+    sortByValue = (deck) => {
+        return deck.sort(compareCardValue);
     }
 
 }
@@ -128,4 +138,11 @@ let includesRank = (deck, card) => {
         }
     }
     return false;
+}
+
+// sortera kort efter valör
+function compareCardValue( a, b ) {
+    if ( a.value < b.value ) return -1;
+    if ( a.value > b.value ) return 1;
+    return 0;
 }
