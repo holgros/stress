@@ -32,8 +32,43 @@ window.onload = () => {
 
     let player = document.getElementById("player");
     let playerVisible = player.getElementsByClassName("col-20");
-    for (let i = 0; i < playerVisible.length; i++) {
-        
+    let cardsInEachPile;
+    let selected;
+    let hovering;
+
+    let faceCardMousedownHandler = (e) => {
+        let div = document.getElementById(e.target.id);
+        div.style.color = "red";
+        let id = Number(e.target.id.substring(8));
+        selected = cardsInEachPile[id];
+    }
+
+    let mouseuphandler = (e) => {
+        //console.log(selected);
+        for (let i = 0; i < 4; i++) {
+            let faceCard = document.getElementById("faceCard"+i);
+            faceCard.style.color = "black";
+        }
+        selected = undefined;
+    }
+
+    window.addEventListener("mouseup", mouseuphandler);
+
+    for (let i = 0; i < 4; i++) {
+        let faceDiv = document.getElementById("faceCard"+i);
+        faceDiv.addEventListener("mousedown", faceCardMousedownHandler);
+    }
+
+    for (let face of ["face1", "face2"]) {
+        let faceDiv = document.getElementById(face);
+        faceDiv.addEventListener("mouseenter", (e) => {
+            hovering = Number(face.substring(4));
+            e.target.style.color = "red";
+        });
+        faceDiv.addEventListener("mouseout", (e) => {
+            hovering = undefined;
+            e.target.style.color = "black";
+        });
     }
 
     socket.emit("startGame", id);
@@ -50,7 +85,7 @@ window.onload = () => {
         let opponent = document.getElementById("opponent");
         let opponentVisible = opponent.getElementsByClassName("col-20");
         placeCards(opponentVisible, info.opponentVisible);
-        placeCards(playerVisible, info.playerVisible);
+        cardsInEachPile = placeCards(playerVisible, info.playerVisible);
         if (info.face1 && info.face2) {
             let face1 = document.getElementById("face1");
             face1.innerHTML = info.face1.unicode + `<div class="counter" id="nbrFace1"></div>`;
@@ -106,4 +141,15 @@ let placeCards = (divs, deck) => {
         multiValues[i+j]++;
         divs[i+j].innerHTML = `${card.unicode}<div class="counter">${multiValues[i+j]}</div>`;
     }
+    let output = [];
+    let k = 0;
+    for (let nbrMultiples of multiValues) {
+        let temp = [];
+        for (let i = 0; i < nbrMultiples; i++) {
+            temp.push(deck[k]);
+            k++;
+        }
+        output.push(temp);
+    }
+    return output;
 }

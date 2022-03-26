@@ -1,4 +1,4 @@
-const mock = false;  // FALSE VID DEPLOYMENT
+const mock = true;  // FALSE VID DEPLOYMENT
 const MOCKOPPONENT = "Firefox*-*" + Date.now();
 const TIMEOUTMILLISECONDS = 3000;
 
@@ -108,13 +108,13 @@ app.get("/game", (req, res) => {
 
     /* TA BORT VID DEPLOYMENT */
     if (mock) {
-    req.session.opponent = MOCKOPPONENT;                // MOCK
-    req.session.playerId = "Chrome*-*" + Date.now();    // MOCK
-    req.session.playerName = "Chrome";                  // MOCK
-    req.session.lang = "sv";                            // MOCK
+        req.session.opponent = MOCKOPPONENT;                // MOCK
+        req.session.playerId = "Chrome*-*" + Date.now();    // MOCK
+        req.session.playerName = "Chrome";                  // MOCK
+        req.session.lang = "sv";                            // MOCK
     }
-
     /* TA BORT VID DEPLOYMENT */
+
     if (!req.session.opponent) {
         req.session.destroy();
         res.redirect("/");
@@ -229,16 +229,13 @@ io.on("connect", (socket) => {
             gameId = getGamesIndex(playerId, opponentId);
         }
         else gameId = getGamesIndexOverloaded(playerId);
-        if (gameId == undefined) socket.emit("error", {type: "GameNotFound"});
+        if (gameId == undefined) socket.emit("error", {type: "GameNotFound"});  // TODO: Godtycklig översättning
         let game = games[gameId];
         let gameInfo = game.getInfo(playerId);
         socket.emit("updateGame", gameInfo);
         if (game.face1.length + game.face2.length < 2 || game.standoff()) {
-        //if (game.face1.length == 0 || game.standoff()) {
-            // TODO: Hantera kortläggning på trådsäkert sätt
-            //game.nextFaces();
-            game.nextFace(playerId);
-            //console.log(game);
+            if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
+            else game.nextFace(playerId);
         }
         //console.log("Standoff: " + game.standoff());
         gameInfo = game.getInfo(playerId);
@@ -252,7 +249,7 @@ io.on("connect", (socket) => {
     // för att hämta spelet igen
     socket.on("getGame", (playerId) => {
         let gameId = getGamesIndexOverloaded(playerId);
-        let type = "GameNotFound";
+        let type = "GameNotFound";  // TODO: Godtycklig översättning
         if (gameId == undefined) socket.emit("error", {type: type});
         let game = games[gameId];
         let gameInfo = game.getInfo(playerId);
@@ -260,7 +257,7 @@ io.on("connect", (socket) => {
     });
 
     socket.on("abortGame", (playerId) => {
-        let msg = "Game has been canceled!";
+        let msg = "Game has been canceled!";    // TODO: Godtycklig översättning
         socket.emit("abortGame", {msg: msg});
         // ta bort spelet och meddela motspelaren
         let gameId = getGamesIndexOverloaded(playerId);
@@ -268,15 +265,15 @@ io.on("connect", (socket) => {
         game.canceled = true;
     });
 
-    // när något hänt i spelet
-    socket.on("updateGame", (data) => {
+    // när någon har gjort något i spelet
+    socket.on("playerMove", (data) => {
         let gameId = getGamesIndexOverloaded(data.playerId);
         let game = games[gameId];
         if (game.canceled) {
             games = games.filter((value, index, arr) => {
                 return value != game;
             });
-            let msg = "Game has been canceled!";
+            let msg = "Game has been canceled!";    // TODO: Godtycklig översättning
             socket.emit("abortGame", {msg: msg});
             return;
         }
