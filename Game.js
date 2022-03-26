@@ -36,6 +36,24 @@ module.exports = class Game {
         this.waiting = true;
     }
 
+    nextFace = (id) => {
+        if (this.player1.deck.length + this.player2.deck.length < 2) {
+            // TODO: Aktivera handpåläggning
+        }
+        let card;
+        let player = this.player1;
+        let opponent = this.player2;
+        let face = this.face1;
+        if (this.players.name2 == id) {
+            player = this.player2;
+            opponent = this.player1;
+            face = this.face2;
+        }
+        if (player.deck.length > 0) card = player.deck.pop();
+        else card = opponent.pop();
+        face.push(card);
+    }
+    
     nextFaces = () => {
         if (this.player1.deck.length + this.player2.deck.length < 2) {
             // TODO: Aktivera handpåläggning

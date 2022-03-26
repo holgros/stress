@@ -24,7 +24,12 @@ window.onload = () => {
     let socket = io();
 
     let id = document.head.querySelector("[name~=playerId][content]").content;
-    
+
+    let quitConfirmationButton = document.getElementById("quitConfirmationButton");
+    quitConfirmationButton.addEventListener("click", () => {
+        socket.emit("abortGame", id);
+    });
+
     let player = document.getElementById("player");
     let playerVisible = player.getElementsByClassName("col-20");
     for (let i = 0; i < playerVisible.length; i++) {
@@ -34,6 +39,10 @@ window.onload = () => {
     socket.emit("startGame", id);
     
     socket.on("updateGame", (info) => {
+        if (info.nbrFace1 == 0 || info.nbrFace2 == 0) {
+            socket.emit("getGame", id);
+            return;
+        }
         let nbrOpponent = document.getElementById("nbrOpponent");
         nbrOpponent.innerHTML = info.nbrOpponentDeck;
         let nbrPlayer = document.getElementById("nbrPlayer");
@@ -52,6 +61,7 @@ window.onload = () => {
         nbrFace1.innerHTML = info.nbrFace1;
         let nbrFace2 = document.getElementById("nbrFace2");
         nbrFace2.innerHTML = info.nbrFace2;
+        console.log(info);
     });
 
     socket.on("error", (data) => {
@@ -73,6 +83,11 @@ window.onload = () => {
                 clearInterval(myInterval);
             }
         }, timeInterval);
+    });
+
+    socket.on("abortGame", (data) => {
+        alert(data.msg);
+        window.location.replace("/logout");
     });
 
 };

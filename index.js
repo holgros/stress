@@ -1,4 +1,4 @@
-const mock = true;  // FALSE VID DEPLOYMENT
+const mock = false;  // FALSE VID DEPLOYMENT
 const MOCKOPPONENT = "Firefox*-*" + Date.now();
 const TIMEOUTMILLISECONDS = 3000;
 
@@ -233,9 +233,12 @@ io.on("connect", (socket) => {
         let game = games[gameId];
         let gameInfo = game.getInfo(playerId);
         socket.emit("updateGame", gameInfo);
-        if (game.face1.length == 0 || game.standoff()) {
+        if (game.face1.length + game.face2.length < 2 || game.standoff()) {
+        //if (game.face1.length == 0 || game.standoff()) {
             // TODO: Hantera kortläggning på trådsäkert sätt
-            game.nextFaces();
+            //game.nextFaces();
+            game.nextFace(playerId);
+            //console.log(game);
         }
         //console.log("Standoff: " + game.standoff());
         gameInfo = game.getInfo(playerId);
@@ -244,6 +247,39 @@ io.on("connect", (socket) => {
             socket.emit("updateGame", gameInfo);
             game.waiting = false;
         }, TIMEOUTMILLISECONDS);
+    });
+
+    // för att hämta spelet igen
+    socket.on("getGame", (playerId) => {
+        let gameId = getGamesIndexOverloaded(playerId);
+        let type = "GameNotFound";
+        if (gameId == undefined) socket.emit("error", {type: type});
+        let game = games[gameId];
+        let gameInfo = game.getInfo(playerId);
+        socket.emit("updateGame", gameInfo);
+    });
+
+    socket.on("abortGame", (playerId) => {
+        let msg = "Game has been canceled!";
+        socket.emit("abortGame", {msg: msg});
+        // ta bort spelet och meddela motspelaren
+        let gameId = getGamesIndexOverloaded(playerId);
+        let game = games[gameId];
+        game.canceled = true;
+    });
+
+    // när något hänt i spelet
+    socket.on("updateGame", (data) => {
+        let gameId = getGamesIndexOverloaded(data.playerId);
+        let game = games[gameId];
+        if (game.canceled) {
+            games = games.filter((value, index, arr) => {
+                return value != game;
+            });
+            let msg = "Game has been canceled!";
+            socket.emit("abortGame", {msg: msg});
+            return;
+        }
     });
 
 });
