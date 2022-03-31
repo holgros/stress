@@ -1,3 +1,5 @@
+const { set } = require("express/lib/application");
+
 module.exports = class Game {
     constructor(name1, name2) {
         let deck = getDeck();
@@ -36,6 +38,7 @@ module.exports = class Game {
         this.waiting = true;
     }
 
+    // ta ett kort från spelarens hög och lägg den i en av högarna i mitten
     nextFace = (id) => {
         if (this.player1.deck.length + this.player2.deck.length < 2) {
             // TODO: Aktivera handpåläggning
@@ -50,10 +53,11 @@ module.exports = class Game {
             face = this.face2;
         }
         if (player.deck.length > 0) card = player.deck.pop();
-        else card = opponent.pop();
+        else card = opponent.deck.pop();
         face.push(card);
     }
     
+    // som ovanstående, men tar ett kort från varje spelare - används vid testning
     nextFaces = () => {
         if (this.player1.deck.length + this.player2.deck.length < 2) {
             // TODO: Aktivera handpåläggning
@@ -106,6 +110,42 @@ module.exports = class Game {
 
     sortByValue = (deck) => {
         return deck.sort(compareCardValue);
+    }
+
+    getTypeOfMove = (data) => {
+        if (data.player && data.cards && data.deck && (data.deck == 1 || data.deck == 2)) {
+            let face = this.face1;
+            if (data.deck == 2) face = this.face2;
+            if (Math.abs(data.cards[0].value - face[face.length - 1].value) % 11 == 1) return "standard move";
+        }
+        return undefined;
+    }
+
+    lessThanFourIdenticals = (deck) => {
+        let numbers = new Set();
+        for (let i = 0; i < deck.length; i++) {
+            let card = deck[i];
+            numbers.add(card.value);
+        }
+        return numbers.size < 4;
+    }
+
+    moveCards = (data) => {
+        let player = this.player1;
+        if (data.player == this.player2.name) player = this.player2;
+        let face = this.face1;
+        if (data.deck == 2) face = this.face2;
+        for (let i = 0; i < data.cards.length; i++) {
+            face.push(data.cards[i]);
+            player.visible = player.visible.filter((value, index, arr) => {
+                return value.suit != data.cards[i].suit || value.value != data.cards[i].value;
+            });
+        }
+        while (player.deck.length > 0 && this.lessThanFourIdenticals(player.visible)) {
+            player.visible.push(player.deck.pop());
+            player.visible = this.sortByValue(player.visible);
+        }
+        // TODO: Hantera fallet då spelarens deck är slut
     }
 
 }

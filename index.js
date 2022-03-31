@@ -1,6 +1,6 @@
-const mock = true;  // FALSE VID DEPLOYMENT
+const mock = false;  // FALSE VID DEPLOYMENT
 const MOCKOPPONENT = "Firefox*-*" + Date.now();
-const TIMEOUTMILLISECONDS = 3000;
+const TIMEOUTMILLISECONDS = 300;
 
 const express = require("express");
 const fs = require("fs");
@@ -20,6 +20,7 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 let gameRequests = [];
 let tempMatchings = {};
+let gameSockets = [];
 
 // sessionshantering
 const oneHour = 1000 * 60 * 60;
@@ -175,6 +176,7 @@ let getGamesIndexOverloaded = (id) => {
     }
     if (mock) {
         games.push(new Game(id, MOCKOPPONENT));
+        console.log("CREATED NEW GAME!");
         return games.length - 1;
     }
     return undefined;
@@ -218,10 +220,15 @@ io.on("connect", (socket) => {
         gameRequests = gameRequests.filter((value, index, arr) => {
             return value != socket; // ta bort från connections
         });
+        gameSockets = gameSockets.filter((value, index, arr) => {
+            return value != socket; // ta bort från connections
+        });
     });
 
     // när spel startas
     socket.on("startGame", (playerId) => {
+        socket.playerId = playerId;
+        gameSockets.push(socket);
         let opponentId = tempMatchings[playerId];
         let gameId;
         if (opponentId) {
@@ -243,6 +250,7 @@ io.on("connect", (socket) => {
         setTimeout(() => {
             socket.emit("updateGame", gameInfo);
             game.waiting = false;
+            if (game.standoff()) handleStandoff(game);
         }, TIMEOUTMILLISECONDS);
     });
 
@@ -267,7 +275,7 @@ io.on("connect", (socket) => {
 
     // när någon har gjort något i spelet
     socket.on("playerMove", (data) => {
-        let gameId = getGamesIndexOverloaded(data.playerId);
+        let gameId = getGamesIndexOverloaded(data.player);
         let game = games[gameId];
         if (game.canceled) {
             games = games.filter((value, index, arr) => {
@@ -277,6 +285,44 @@ io.on("connect", (socket) => {
             socket.emit("abortGame", {msg: msg});
             return;
         }
+        let typeOfMove = game.getTypeOfMove(data);
+        if (!typeOfMove) return;    // if undefined
+        switch(typeOfMove) {
+            case "standard move":
+                game.moveCards(data);
+                gameInfo = game.getInfo(data.player);
+                socket.emit("updateGame", gameInfo);
+                let opponent = game.player1.name;
+                if (opponent == data.player) opponent = game.player2.name;
+                for (let i = 0; i < gameSockets.length; i++) {
+                    if (gameSockets[i].playerId == opponent) {
+                        gameInfo = game.getInfo(opponent);
+                        gameSockets[i].emit("updateGame", gameInfo);
+                    }
+                }
+                if (game.standoff()) handleStandoff(game);
+                break;
+            case "stress":
+                // code block
+                break;
+        }
     });
+
+    let handleStandoff = (game) => {
+        console.log("STANDOFF!!");
+        for (let playerId in game.players) {
+            if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
+            else game.nextFace(playerId);
+            // TODO: hantera fall då player.deck är tom
+            gameInfo = game.getInfo(playerId);
+            socket.emit("wait", TIMEOUTMILLISECONDS);
+            setTimeout(() => {
+                socket.emit("updateGame", gameInfo);
+                game.waiting = false;
+                if (game.standoff()) handleStandoff(game);
+            }, TIMEOUTMILLISECONDS);
+        }
+
+    }
 
 });
