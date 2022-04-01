@@ -16,7 +16,8 @@ module.exports = class Game {
         this.face1 = [];
         this.face2 = [];
         for (let playerDeck of [this.player1.deck, this.player2.deck]) {
-            for (let i = 0; i < 26; i++) {
+            //for (let i = 0; i < 26; i++) {
+            for (let i = 0; i < 12; i++) {  // MOCK!!
                 playerDeck.push(deck.pop());
             }
         }
@@ -36,12 +37,20 @@ module.exports = class Game {
             name2: this.player2.name
         }
         this.waiting = true;
+        this.stalemate = false;
     }
 
     // ta ett kort från spelarens hög och lägg den i en av högarna i mitten
     nextFace = (id) => {
+        let blockedThread = false;
+        if (this.player1.deck.length + this.player2.deck.length == 2) {
+            blockedThread = true;
+            this.nextFaces();
+            blockedThread = false;
+            return;
+        }
         if (this.player1.deck.length + this.player2.deck.length < 2) {
-            // TODO: Aktivera handpåläggning
+            return;
         }
         let card;
         let player = this.player1;
@@ -57,7 +66,7 @@ module.exports = class Game {
         face.push(card);
     }
     
-    // som ovanstående, men tar ett kort från varje spelare - används vid testning
+    // som ovanstående, men tar ett kort från varje spelare - används vid specialfallet då spelarna tillsammans har exakt två kort kvar samt vid testning
     nextFaces = () => {
         if (this.player1.deck.length + this.player2.deck.length < 2) {
             // TODO: Aktivera handpåläggning

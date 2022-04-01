@@ -99,14 +99,36 @@ window.onload = () => {
     
     socket.on("updateGame", (info) => {
         console.log(info);
+        if (info.gameover) {
+            alert("Game over!");    // TODO: ändra till annat språk!
+        }
         if (info.nbrFace1 == 0 || info.nbrFace2 == 0) {
             socket.emit("getGame", id);
             return;
         }
-        let nbrOpponent = document.getElementById("nbrOpponent");
-        nbrOpponent.innerHTML = info.nbrOpponentDeck;
-        let nbrPlayer = document.getElementById("nbrPlayer");
-        nbrPlayer.innerHTML = info.nbrPlayerDeck;
+        if (info.nbrOpponentDeck == 0) {
+            let opponentDeck = document.getElementById("opponentDeck");
+            opponentDeck.innerHTML = `<div class="counter" id="nbrOpponent"></div>`;
+        }
+        else {
+            let opponentDeck = document.getElementById("opponentDeck");
+            opponentDeck.innerHTML = `&#x1F0A0<div class="counter" id="nbrOpponent"></div>`;
+            let nbrOpponent = document.getElementById("nbrOpponent");
+            nbrOpponent.innerHTML = info.nbrOpponentDeck;
+        }
+        if (info.nbrPlayerDeck == 0) {
+            let playerDeck = document.getElementById("playerDeck");
+            playerDeck.innerHTML = `<div class="counter" id="nbrPlayer"></div>`;
+        }
+        else {
+            let playerDeck = document.getElementById("playerDeck");
+            playerDeck.innerHTML = `&#x1F0A0<div class="counter" id="nbrPlayer"></div>`;
+            let nbrPlayer = document.getElementById("nbrPlayer");
+            nbrPlayer.innerHTML = info.nbrPlayerDeck;
+        }
+        if (info.nbrPlayerDeck == 0) {
+            nbrPlayer.innerHTML = "";
+        }
         let opponent = document.getElementById("opponent");
         let opponentVisible = opponent.getElementsByClassName("col-20");
         placeCards(opponentVisible, info.opponentVisible);
@@ -123,7 +145,6 @@ window.onload = () => {
         nbrFace1.innerHTML = info.nbrFace1;
         let nbrFace2 = document.getElementById("nbrFace2");
         nbrFace2.innerHTML = info.nbrFace2;
-        //console.log(info);
     });
 
     socket.on("error", (data) => {
@@ -160,17 +181,23 @@ window.onload = () => {
 
 // placera synliga kort - korten förutsätts vara sorterade efter valör
 let placeCards = (divs, deck) => {
-    let multiValues = [1, 1, 1, 1];
+    let multiValues = [0, 0, 0, 0];
     let j = 0;
     for (let i = 0; i < deck.length; i++) {
         let card = deck[i];
         if (i == 0 || deck[i-1].value != card.value) {
             divs[i+j].innerHTML = `${card.unicode}<div class="counter"></div>`;
+            multiValues[i+j] = 1;
             continue;
         }
         j--;
         multiValues[i+j]++;
         divs[i+j].innerHTML = `${card.unicode}<div class="counter">${multiValues[i+j]}</div>`;
+    }
+    for (let i = 0; i < 4; i++) {
+        if (multiValues[i] == 0) {
+            divs[i].innerHTML = "";
+        }
     }
     let output = [];
     let k = 0;

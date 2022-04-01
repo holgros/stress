@@ -1,6 +1,6 @@
 const mock = false;  // FALSE VID DEPLOYMENT
 const MOCKOPPONENT = "Firefox*-*" + Date.now();
-const TIMEOUTMILLISECONDS = 300;
+const TIMEOUTMILLISECONDS = 3000;
 
 const express = require("express");
 const fs = require("fs");
@@ -33,6 +33,7 @@ app.use(sessions({
 
 // importera klassen Game
 const Game = require("./Game.js");
+const { emit } = require("process");
 let games = [];
 
 // omdirigera till start med lämpligt språk
@@ -244,7 +245,6 @@ io.on("connect", (socket) => {
             if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
             else game.nextFace(playerId);
         }
-        //console.log("Standoff: " + game.standoff());
         gameInfo = game.getInfo(playerId);
         socket.emit("wait", TIMEOUTMILLISECONDS);
         setTimeout(() => {
@@ -291,6 +291,9 @@ io.on("connect", (socket) => {
             case "standard move":
                 game.moveCards(data);
                 gameInfo = game.getInfo(data.player);
+                if (game.player1.visible.length == 0 || game.player2.visible.length == 0) {
+                    gameInfo.gameover = true;
+                }
                 socket.emit("updateGame", gameInfo);
                 let opponent = game.player1.name;
                 if (opponent == data.player) opponent = game.player2.name;
@@ -310,10 +313,17 @@ io.on("connect", (socket) => {
 
     let handleStandoff = (game) => {
         console.log("STANDOFF!!");
+        if (game.player1.deck.length + game.player2.deck.length < 2) {
+            game.stalemate = true;
+            console.log("STALEMATE!!");
+            return;
+        }
+        else {
+            game.stalemate = false;
+        }
         for (let playerId in game.players) {
             if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
             else game.nextFace(playerId);
-            // TODO: hantera fall då player.deck är tom
             gameInfo = game.getInfo(playerId);
             socket.emit("wait", TIMEOUTMILLISECONDS);
             setTimeout(() => {
