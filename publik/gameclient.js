@@ -11,6 +11,7 @@ window.onload = () => {
     let hovering;
     let waiting;
     let id = document.head.querySelector("[name~=playerId][content]").content;
+    let stalemate;
 
     // HÄNDELSEHANTERARE
 
@@ -91,6 +92,14 @@ window.onload = () => {
             hovering = undefined;
             e.target.style.color = "black";
         });
+        faceDiv.addEventListener("click", (e) => {
+            if (!stalemate) return;
+            socket.emit("playerMove", {
+                face: face,
+                player: id
+            });
+            stalemate = false;
+        });
     }
 
     // SOCKET-HÄNDELSER
@@ -99,9 +108,6 @@ window.onload = () => {
     
     socket.on("updateGame", (info) => {
         console.log(info);
-        if (info.gameover) {
-            alert("Game over!");    // TODO: ändra till annat språk!
-        }
         if (info.nbrFace1 == 0 || info.nbrFace2 == 0) {
             socket.emit("getGame", id);
             return;
@@ -145,6 +151,9 @@ window.onload = () => {
         nbrFace1.innerHTML = info.nbrFace1;
         let nbrFace2 = document.getElementById("nbrFace2");
         nbrFace2.innerHTML = info.nbrFace2;
+        if (info.gameover) {
+            clickListener();    // Visa dialogruta
+        }
     });
 
     socket.on("error", (data) => {
@@ -173,6 +182,19 @@ window.onload = () => {
     socket.on("abortGame", (data) => {
         alert(data.msg);
         window.location.replace("/logout");
+    });
+
+    socket.on("gameover", (data) => {
+        document.getElementById("quit").innerHTML = data;
+    });
+
+    socket.on("stalemate", () => {
+        stalemate = true;
+    });
+
+    socket.on("claim", (data) => {
+        alert("Claimed: " + data);
+        // TODO: hantera claim
     });
 
 };

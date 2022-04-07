@@ -1,6 +1,6 @@
 const mock = false;  // FALSE VID DEPLOYMENT
 const MOCKOPPONENT = "Firefox*-*" + Date.now();
-const TIMEOUTMILLISECONDS = 3000;
+const TIMEOUTMILLISECONDS = 300;
 
 const express = require("express");
 const fs = require("fs");
@@ -183,6 +183,11 @@ let getGamesIndexOverloaded = (id) => {
     return undefined;
 }
 
+// generera meddelande när spelet är slut
+let getGameOverMsg = (game, player) => {
+    return "Spelet är slut: " + player;
+}
+
 // avgöra om spelare redan har startat ett spel
 let isPlayer = (id) => {
     for (let i = 0; i < games.length; i++) {
@@ -277,6 +282,11 @@ io.on("connect", (socket) => {
     socket.on("playerMove", (data) => {
         let gameId = getGamesIndexOverloaded(data.player);
         let game = games[gameId];
+        if (game.gameover) {
+            gameInfo = game.getInfo(data.player);
+            socket.emit("updateGame", gameInfo);
+            return;
+        }
         if (game.canceled) {
             games = games.filter((value, index, arr) => {
                 return value != game;
@@ -287,23 +297,34 @@ io.on("connect", (socket) => {
         }
         let typeOfMove = game.getTypeOfMove(data);
         if (!typeOfMove) return;    // if undefined
+        let opponent = game.player1.name;
+        if (opponent == data.player) opponent = game.player2.name;
         switch(typeOfMove) {
             case "standard move":
                 game.moveCards(data);
                 gameInfo = game.getInfo(data.player);
                 if (game.player1.visible.length == 0 || game.player2.visible.length == 0) {
                     gameInfo.gameover = true;
+                    game.gameover = true;
+                    socket.emit("gameover", getGameOverMsg(game, data.player));
                 }
                 socket.emit("updateGame", gameInfo);
-                let opponent = game.player1.name;
-                if (opponent == data.player) opponent = game.player2.name;
                 for (let i = 0; i < gameSockets.length; i++) {
                     if (gameSockets[i].playerId == opponent) {
                         gameInfo = game.getInfo(opponent);
                         gameSockets[i].emit("updateGame", gameInfo);
+                        if (gameInfo.gameover) {
+                            gameSockets[i].emit("gameover", getGameOverMsg(game, opponent));
+                        }
                     }
                 }
                 if (game.standoff()) handleStandoff(game);
+                break;
+            case "claim":
+                console.log("CLAIM!");
+                // TODO: Hantera claim...
+                emitToAllPlayerSockets(data.player, "claim", "Tjena!");
+                emitToAllPlayerSockets(opponent, "claim", "Tjena!");
                 break;
             case "stress":
                 // code block
@@ -313,26 +334,62 @@ io.on("connect", (socket) => {
 
     let handleStandoff = (game) => {
         console.log("STANDOFF!!");
+        //console.log(game.players);
         if (game.player1.deck.length + game.player2.deck.length < 2) {
             game.stalemate = true;
             console.log("STALEMATE!!");
-            return;
         }
         else {
             game.stalemate = false;
         }
-        for (let playerId in game.players) {
+        for (let name in game.players) {
+            //console.log(name);
+            let playerId = game.players[name];
+            let mySockets = getSocketsById(playerId);
+            //console.log(playerId);
+            //console.log(mySockets);
+            if (game.stalemate) {
+                for (let s of mySockets) {
+                    s.emit("stalemate");
+                    //console.log("emitted from socket:");
+                    //console.log(s.playerId);
+                }
+                continue;
+            }
             if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
             else game.nextFace(playerId);
             gameInfo = game.getInfo(playerId);
-            socket.emit("wait", TIMEOUTMILLISECONDS);
+            //socket.emit("wait", TIMEOUTMILLISECONDS);
+            for (let s of mySockets) {
+                s.emit("wait", TIMEOUTMILLISECONDS);
+            }
             setTimeout(() => {
-                socket.emit("updateGame", gameInfo);
+                //socket.emit("updateGame", gameInfo);
+                for (let s of mySockets) {
+                    s.emit("updateGame", gameInfo);
+                }    
                 game.waiting = false;
                 if (game.standoff()) handleStandoff(game);
             }, TIMEOUTMILLISECONDS);
         }
 
+    }
+
+    let getSocketsById = (id) => {
+        let output = [];
+        for (let i = 0; i < gameSockets.length; i++) {
+            if (gameSockets[i].playerId == id) {
+                output.push(gameSockets[i]);
+            }
+        }
+        return output;
+    }
+
+    let emitToAllPlayerSockets = (player, evt, data) => {
+        let mySockets = getSocketsById(player);
+        for (let i = 0; i < mySockets.length; i++) {
+            mySockets[i].emit(evt, data);
+        }
     }
 
 });

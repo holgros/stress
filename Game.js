@@ -17,7 +17,7 @@ module.exports = class Game {
         this.face2 = [];
         for (let playerDeck of [this.player1.deck, this.player2.deck]) {
             //for (let i = 0; i < 26; i++) {
-            for (let i = 0; i < 12; i++) {  // MOCK!!
+            for (let i = 0; i < 6; i++) {  // MOCK!!
                 playerDeck.push(deck.pop());
             }
         }
@@ -73,7 +73,7 @@ module.exports = class Game {
         }
         let card;
         if (this.player1.deck.length > 0) card = this.player1.deck.pop();
-        else card = this.player2.pop();
+        else card = this.player2.deck.pop();
         this.face1.push(card);
         if (this.player2.deck.length > 0) card = this.player2.deck.pop();
         else card = this.player1.pop();
@@ -127,6 +127,11 @@ module.exports = class Game {
             if (data.deck == 2) face = this.face2;
             if (Math.abs(data.cards[0].value - face[face.length - 1].value) % 11 == 1) return "standard move";
         }
+        if (data.face && ["face1", "face2"].includes(data.face) && this.standoff && this.stalemate) {
+            this.stalemate = false;
+            this.standoff = false;
+            return "claim";
+        }
         return undefined;
     }
 
@@ -144,6 +149,9 @@ module.exports = class Game {
         if (data.player == this.player2.name) player = this.player2;
         let face = this.face1;
         if (data.deck == 2) face = this.face2;
+        if (Math.abs(face[face.length-1].value - data.cards[0].value) % 11 != 1) {
+            return; // ogiltigt drag, t.ex. vid manipulation av klientsideskod, gör ingenting
+        }
         for (let i = 0; i < data.cards.length; i++) {
             face.push(data.cards[i]);
             player.visible = player.visible.filter((value, index, arr) => {
