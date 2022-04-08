@@ -16,8 +16,8 @@ module.exports = class Game {
         this.face1 = [];
         this.face2 = [];
         for (let playerDeck of [this.player1.deck, this.player2.deck]) {
-            //for (let i = 0; i < 26; i++) {
-            for (let i = 0; i < 6; i++) {  // MOCK!!
+            for (let i = 0; i < 26; i++) {
+            //for (let i = 0; i < 6; i++) {  // MOCK!!
                 playerDeck.push(deck.pop());
             }
         }
@@ -76,7 +76,7 @@ module.exports = class Game {
         else card = this.player2.deck.pop();
         this.face1.push(card);
         if (this.player2.deck.length > 0) card = this.player2.deck.pop();
-        else card = this.player1.pop();
+        else card = this.player1.deck.pop();
         this.face2.push(card);
     };
 
@@ -129,7 +129,6 @@ module.exports = class Game {
         }
         if (data.face && ["face1", "face2"].includes(data.face) && this.standoff && this.stalemate) {
             this.stalemate = false;
-            this.standoff = false;
             return "claim";
         }
         return undefined;
@@ -163,6 +162,41 @@ module.exports = class Game {
             player.visible = this.sortByValue(player.visible);
         }
         // TODO: Hantera fallet då spelarens deck är slut
+    }
+
+    handleClaim = (playerId, face) => {
+        //console.log("Handling claim for " + playerId);
+        //console.log("Chosen face: " + face);
+        let playerFace = this.face1;
+        let opponentFace = this.face2;
+        if (face == "face2") {
+            playerFace = this.face2;
+            opponentFace = this.face1;
+        }
+        let playerDeck = this.player1.deck;
+        let opponentDeck = this.player2.deck;
+        let playerVisible = this.player1.visible;
+        let opponentVisible = this.player2.visible;
+        if (playerId == this.player2.name) {
+            playerDeck = this.player2.deck;
+            opponentDeck = this.player1.deck;
+            playerVisible = this.player2.visible;
+            opponentVisible = this.player1.visible;
+        }
+        for (let i = 0; i < playerFace.length; i++) {
+            playerDeck.push(playerFace.pop());
+        }
+        playerDeck = shuffle(playerDeck);
+        while (this.lessThanFourIdenticals(playerVisible) && playerDeck.length > 0) {
+            playerVisible.push(playerDeck.pop());
+        }
+        for (let i = 0; i < opponentFace.length; i++) {
+            opponentDeck.push(opponentFace.pop());
+        }
+        opponentDeck = shuffle(opponentDeck);
+        while (this.lessThanFourIdenticals(opponentVisible) && opponentDeck.length > 0) {
+            opponentVisible.push(opponentDeck.pop());
+        }
     }
 
 }

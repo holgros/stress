@@ -1,6 +1,6 @@
 const mock = false;  // FALSE VID DEPLOYMENT
 const MOCKOPPONENT = "Firefox*-*" + Date.now();
-const TIMEOUTMILLISECONDS = 300;
+const TIMEOUTMILLISECONDS = 3000;
 
 const express = require("express");
 const fs = require("fs");
@@ -196,6 +196,19 @@ let isPlayer = (id) => {
     return false;
 }
 
+/*
+// Fisher-Yates (Knuth) algorithm
+let shuffle = (array) => {
+    let currentIndex = array.length,  randomIndex;
+    while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
+}
+*/
+
 // socket-hanterare
 io.on("connect", (socket) => {
     
@@ -292,7 +305,9 @@ io.on("connect", (socket) => {
                 return value != game;
             });
             let msg = "Game has been canceled!";    // TODO: Godtycklig översättning
-            socket.emit("abortGame", {msg: msg});
+            emitToAllPlayerSockets(game.player1.name, "abortGame", {msg: msg});
+            emitToAllPlayerSockets(game.player2.name, "abortGame", {msg: msg});
+            //socket.emit("abortGame", {msg: msg});
             return;
         }
         let typeOfMove = game.getTypeOfMove(data);
@@ -313,7 +328,7 @@ io.on("connect", (socket) => {
                     if (gameSockets[i].playerId == opponent) {
                         gameInfo = game.getInfo(opponent);
                         gameSockets[i].emit("updateGame", gameInfo);
-                        if (gameInfo.gameover) {
+                        if (game.gameover) {
                             gameSockets[i].emit("gameover", getGameOverMsg(game, opponent));
                         }
                     }
@@ -321,10 +336,15 @@ io.on("connect", (socket) => {
                 if (game.standoff()) handleStandoff(game);
                 break;
             case "claim":
-                console.log("CLAIM!");
-                // TODO: Hantera claim...
-                emitToAllPlayerSockets(data.player, "claim", "Tjena!");
-                emitToAllPlayerSockets(opponent, "claim", "Tjena!");
+                emitToAllPlayerSockets(data.player, "wait", TIMEOUTMILLISECONDS);
+                emitToAllPlayerSockets(opponent, "wait", TIMEOUTMILLISECONDS);
+                game.handleClaim(data.player, data.face);
+                setTimeout(() => {
+                    gameInfo = game.getInfo(data.player);                
+                    emitToAllPlayerSockets(data.player, "updateGame", gameInfo);
+                    gameInfo = game.getInfo(opponent);
+                    emitToAllPlayerSockets(opponent, "updateGame", gameInfo);
+                }, TIMEOUTMILLISECONDS);
                 break;
             case "stress":
                 // code block
@@ -389,6 +409,8 @@ io.on("connect", (socket) => {
         let mySockets = getSocketsById(player);
         for (let i = 0; i < mySockets.length; i++) {
             mySockets[i].emit(evt, data);
+            //console.log("Emitted event to " + player + ": " + evt);
+            //console.log(data);
         }
     }
 
