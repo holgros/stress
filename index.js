@@ -293,6 +293,7 @@ io.on("connect", (socket) => {
 
     // när någon har gjort något i spelet
     socket.on("playerMove", (data) => {
+        //console.log("playerMove");
         let gameId = getGamesIndexOverloaded(data.player);
         let game = games[gameId];
         if (game.gameover) {
@@ -317,6 +318,13 @@ io.on("connect", (socket) => {
         switch(typeOfMove) {
             case "standard move":
                 game.moveCards(data);
+                
+                /* MOCK
+                console.log("Mocking stress...");
+                game.face1.push({suit: "H", value: 0, unicode: "&#x1F0B1"})
+                game.face2.push({suit: "S", value: 0, unicode: "&#x1F0A1"})
+                */
+                
                 gameInfo = game.getInfo(data.player);
                 if (game.player1.visible.length == 0 || game.player2.visible.length == 0) {
                     gameInfo.gameover = true;
@@ -336,25 +344,48 @@ io.on("connect", (socket) => {
                 if (game.standoff()) handleStandoff(game);
                 break;
             case "claim":
+                console.log("CLAIM!");
+                game.handleClaim(data.player, data.face);
+                gameInfo = game.getInfo(data.player);                
+                emitToAllPlayerSockets(data.player, "updateGame", gameInfo);
+                gameInfo = game.getInfo(opponent);
+                emitToAllPlayerSockets(opponent, "updateGame", gameInfo);
                 emitToAllPlayerSockets(data.player, "wait", TIMEOUTMILLISECONDS);
                 emitToAllPlayerSockets(opponent, "wait", TIMEOUTMILLISECONDS);
-                game.handleClaim(data.player, data.face);
+                game.nextFace(data.player);
+                game.nextFace(opponent);
                 setTimeout(() => {
                     gameInfo = game.getInfo(data.player);                
                     emitToAllPlayerSockets(data.player, "updateGame", gameInfo);
                     gameInfo = game.getInfo(opponent);
                     emitToAllPlayerSockets(opponent, "updateGame", gameInfo);
+                    if (game.standoff()) handleStandoff(game);
                 }, TIMEOUTMILLISECONDS);
                 break;
             case "stress":
-                // code block
+                console.log("STRESS!");
+                game.handleStress(data.player);
+                gameInfo = game.getInfo(data.player);                
+                emitToAllPlayerSockets(data.player, "updateGame", gameInfo);
+                gameInfo = game.getInfo(opponent);
+                emitToAllPlayerSockets(opponent, "updateGame", gameInfo);
+                emitToAllPlayerSockets(data.player, "wait", TIMEOUTMILLISECONDS);
+                emitToAllPlayerSockets(opponent, "wait", TIMEOUTMILLISECONDS);
+                game.nextFace(data.player);
+                game.nextFace(opponent);
+                setTimeout(() => {
+                    gameInfo = game.getInfo(data.player);                
+                    emitToAllPlayerSockets(data.player, "updateGame", gameInfo);
+                    gameInfo = game.getInfo(opponent);
+                    emitToAllPlayerSockets(opponent, "updateGame", gameInfo);
+                    if (game.standoff()) handleStandoff(game);
+                }, TIMEOUTMILLISECONDS);
                 break;
         }
     });
 
     let handleStandoff = (game) => {
         console.log("STANDOFF!!");
-        //console.log(game.players);
         if (game.player1.deck.length + game.player2.deck.length < 2) {
             game.stalemate = true;
             console.log("STALEMATE!!");
@@ -363,28 +394,21 @@ io.on("connect", (socket) => {
             game.stalemate = false;
         }
         for (let name in game.players) {
-            //console.log(name);
             let playerId = game.players[name];
             let mySockets = getSocketsById(playerId);
-            //console.log(playerId);
-            //console.log(mySockets);
             if (game.stalemate) {
                 for (let s of mySockets) {
                     s.emit("stalemate");
-                    //console.log("emitted from socket:");
-                    //console.log(s.playerId);
                 }
                 continue;
             }
             if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
             else game.nextFace(playerId);
             gameInfo = game.getInfo(playerId);
-            //socket.emit("wait", TIMEOUTMILLISECONDS);
             for (let s of mySockets) {
                 s.emit("wait", TIMEOUTMILLISECONDS);
             }
             setTimeout(() => {
-                //socket.emit("updateGame", gameInfo);
                 for (let s of mySockets) {
                     s.emit("updateGame", gameInfo);
                 }    
@@ -409,8 +433,6 @@ io.on("connect", (socket) => {
         let mySockets = getSocketsById(player);
         for (let i = 0; i < mySockets.length; i++) {
             mySockets[i].emit(evt, data);
-            //console.log("Emitted event to " + player + ": " + evt);
-            //console.log(data);
         }
     }
 

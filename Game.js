@@ -131,6 +131,7 @@ module.exports = class Game {
             this.stalemate = false;
             return "claim";
         }
+        if (data.type == "stress" && this.stress()) return "stress";
         return undefined;
     }
 
@@ -165,8 +166,6 @@ module.exports = class Game {
     }
 
     handleClaim = (playerId, face) => {
-        //console.log("Handling claim for " + playerId);
-        //console.log("Chosen face: " + face);
         let playerFace = this.face1;
         let opponentFace = this.face2;
         if (face == "face2") {
@@ -197,6 +196,31 @@ module.exports = class Game {
         while (this.lessThanFourIdenticals(opponentVisible) && opponentDeck.length > 0) {
             opponentVisible.push(opponentDeck.pop());
         }
+    }
+
+    handleStress = (callingPlayer) => {
+        let face1 = this.face1;
+        let face2 = this.face2;
+        let opponentDeck = this.player2.deck;
+        let opponentVisible = this.player2.visible;
+        if (callingPlayer == this.player2.name) {
+            opponentDeck = this.player1.deck;
+            opponentVisible = this.player1.visible;
+        }
+        for (let i = 0; i < face1.length; i++) {
+            opponentDeck.push(face1.pop());
+        }
+        for (let i = 0; i < face2.length; i++) {
+            opponentDeck.push(face2.pop());
+        }
+        opponentDeck = shuffle(opponentDeck);
+        while (this.lessThanFourIdenticals(opponentVisible) && opponentDeck.length > 0) {
+            opponentVisible.push(opponentDeck.pop());
+        }
+    }
+
+    stress = () => {
+        return this.face1[this.face1.length-1].value == this.face2[this.face2.length-1].value;
     }
 
 }

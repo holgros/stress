@@ -1,17 +1,17 @@
+// GLOBALA VARIABLER
+let deck1topCard;
+let deck2topCard;
+let cardsInEachPile;
+let selected;
+let hovering;
+let waiting;
+let stalemate;
 
 window.onload = () => {
-    // GLOBALA VARIABLER
     let socket = io();
     let player = document.getElementById("player");
     let playerVisible = player.getElementsByClassName("col-20");
-    let cardsInEachPile;
-    let deck1topCard;
-    let deck2topCard;
-    let selected;
-    let hovering;
-    let waiting;
     let id = document.head.querySelector("[name~=playerId][content]").content;
-    let stalemate;
 
     // HÄNDELSEHANTERARE
 
@@ -93,6 +93,10 @@ window.onload = () => {
             e.target.style.color = "black";
         });
         faceDiv.addEventListener("click", (e) => {
+            if (stress()) socket.emit("playerMove", {
+                type: "stress",
+                player: id
+            });
             if (!stalemate) return;
             socket.emit("playerMove", {
                 face: face,
@@ -192,10 +196,12 @@ window.onload = () => {
         stalemate = true;
     });
 
+    /*
     socket.on("claim", (data) => {
         alert("Claimed: " + data);
         // TODO: hantera claim
     });
+    */
 
 };
 
@@ -232,4 +238,8 @@ let placeCards = (divs, deck) => {
         output.push(temp);
     }
     return output;
+}
+
+let stress = () => {
+    return deck1topCard.value == deck2topCard.value;
 }
