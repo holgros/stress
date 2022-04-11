@@ -13,15 +13,15 @@ window.onload = () => {
     let playerVisible = player.getElementsByClassName("col-20");
     let id = document.head.querySelector("[name~=playerId][content]").content;
 
-    // HÄNDELSEHANTERARE
+    // HÄNDELSEHANTERARE OCH RELATERADE FUNKTIONER
 
-    let clickListener = () => {
+    let showQuitDialog = () => {
         let confirmDialog = document.getElementById("quitConfirm");
         confirmDialog.style.display = "block";
     }
     
     let quitBtn = document.getElementById("quit");
-    quitBtn.addEventListener("click", clickListener);
+    quitBtn.addEventListener("click", showQuitDialog);
     
     let dismissBtns = document.getElementsByClassName("dismissBtn");
     for (const btn of dismissBtns) {
@@ -34,7 +34,7 @@ window.onload = () => {
     }
 
     let icon = document.getElementsByClassName("icon")[0];
-    icon.addEventListener("click", clickListener);
+    icon.addEventListener("click", showQuitDialog);
 
     let quitConfirmationButton = document.getElementById("quitConfirmationButton");
     quitConfirmationButton.addEventListener("click", () => {
@@ -156,7 +156,7 @@ window.onload = () => {
         let nbrFace2 = document.getElementById("nbrFace2");
         nbrFace2.innerHTML = info.nbrFace2;
         if (info.gameover) {
-            clickListener();    // Visa dialogruta
+            showQuitDialog();    // Visa dialogruta
         }
     });
 
@@ -189,7 +189,10 @@ window.onload = () => {
     });
 
     socket.on("gameover", (data) => {
-        document.getElementById("quit").innerHTML = data;
+        document.getElementById("hamburgerHeader").innerHTML = data;
+        document.getElementById("quit").innerHTML = "";
+        document.getElementById("quitCancelButton").style.display = "none";
+        showQuitDialog();
     });
 
     socket.on("stalemate", () => {

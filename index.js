@@ -14,6 +14,11 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`listening on ${PORT}`));
 const LANGUAGES = ["sv", "en"];
 const DEFAULT_LANGUAGE = "sv";
+let idLanguages = [];
+let languageData;
+fs.readFile("language.json", "utf-8", (jsonErr, jsonData) => {
+    languageData = JSON.parse(jsonData);
+});
 
 // importera socket.io
 const { Server } = require("socket.io");
@@ -117,6 +122,7 @@ app.get("/game", (req, res) => {
     }
     /* TA BORT VID DEPLOYMENT */
 
+    idLanguages[req.session.playerId] = req.session.lang;
     if (!req.session.opponent) {
         req.session.destroy();
         res.redirect("/");
@@ -185,7 +191,37 @@ let getGamesIndexOverloaded = (id) => {
 
 // generera meddelande när spelet är slut
 let getGameOverMsg = (game, player) => {
-    return "Spelet är slut: " + player;
+    let lang = idLanguages[player];
+    lang = languageData.filter(function(item) {
+        return item.language == lang;
+    });
+    let msg;
+    if (lang.length > 0) {
+        msg = lang[0].vocabulary.GAMEOVER;
+        let won = ((game.players.name1 == player && game.player1.visible.length == 0) || (game.players.name2 == player && game.player2.visible.length == 0));
+        if (won) msg += lang[0].vocabulary.YOUHAVEWON;
+        else msg += lang[0].vocabulary.YOUHAVELOST;
+    }
+    return msg;
+}
+
+// generera felmeddelande
+let getErrorMsg = (player, type) => {
+    let lang = idLanguages[player];
+    lang = languageData.filter(function(item) {
+        return item.language == lang;
+    });
+    let msg;
+    if (lang.length > 0) {
+        switch (type) {
+            case "GameNotFound":
+                msg = lang[0].vocabulary.ERRORGAMENOTFOUND;
+                break;
+            case "GameCanceled":
+                msg = lang[0].vocabulary.GAMECANCELED;
+        }
+    }
+    return msg;
 }
 
 // avgöra om spelare redan har startat ett spel
@@ -255,7 +291,7 @@ io.on("connect", (socket) => {
             gameId = getGamesIndex(playerId, opponentId);
         }
         else gameId = getGamesIndexOverloaded(playerId);
-        if (gameId == undefined) socket.emit("error", {type: "GameNotFound"});  // TODO: Godtycklig översättning
+        if (gameId == undefined) socket.emit("error", {type: getErrorMsg(playerId, "ERROR-GAMENOTFOUND")});
         let game = games[gameId];
         let gameInfo = game.getInfo(playerId);
         socket.emit("updateGame", gameInfo);
@@ -275,16 +311,16 @@ io.on("connect", (socket) => {
     // för att hämta spelet igen
     socket.on("getGame", (playerId) => {
         let gameId = getGamesIndexOverloaded(playerId);
-        let type = "GameNotFound";  // TODO: Godtycklig översättning
-        if (gameId == undefined) socket.emit("error", {type: type});
+        let type = "GameNotFound";
+        if (gameId == undefined) socket.emit("error", getErrorMsg(playerId, type));
         let game = games[gameId];
         let gameInfo = game.getInfo(playerId);
         socket.emit("updateGame", gameInfo);
     });
 
     socket.on("abortGame", (playerId) => {
-        let msg = "Game has been canceled!";    // TODO: Godtycklig översättning
-        socket.emit("abortGame", {msg: msg});
+        let type = "GameCanceled";
+        socket.emit("abortGame", {msg: getErrorMsg(playerId, type)});
         // ta bort spelet och meddela motspelaren
         let gameId = getGamesIndexOverloaded(playerId);
         let game = games[gameId];
@@ -296,6 +332,7 @@ io.on("connect", (socket) => {
         //console.log("playerMove");
         let gameId = getGamesIndexOverloaded(data.player);
         let game = games[gameId];
+        let gameInfo;
         if (game.gameover) {
             gameInfo = game.getInfo(data.player);
             socket.emit("updateGame", gameInfo);
@@ -305,9 +342,9 @@ io.on("connect", (socket) => {
             games = games.filter((value, index, arr) => {
                 return value != game;
             });
-            let msg = "Game has been canceled!";    // TODO: Godtycklig översättning
-            emitToAllPlayerSockets(game.player1.name, "abortGame", {msg: msg});
-            emitToAllPlayerSockets(game.player2.name, "abortGame", {msg: msg});
+            let type = "GameCanceled";
+            emitToAllPlayerSockets(game.player1.name, "abortGame", {msg: getErrorMsg(game.player1.name, type)});
+            emitToAllPlayerSockets(game.player2.name, "abortGame", {msg: getErrorMsg(game.player2.name, type)});
             //socket.emit("abortGame", {msg: msg});
             return;
         }
@@ -329,12 +366,13 @@ io.on("connect", (socket) => {
                 if (game.player1.visible.length == 0 || game.player2.visible.length == 0) {
                     gameInfo.gameover = true;
                     game.gameover = true;
-                    socket.emit("gameover", getGameOverMsg(game, data.player));
+                    emitToAllPlayerSockets(data.player, "gameover", getGameOverMsg(game, data.player));
+                    emitToAllPlayerSockets(opponent, "gameover", getGameOverMsg(game, opponent));
                 }
                 socket.emit("updateGame", gameInfo);
+                gameInfo = game.getInfo(opponent);
                 for (let i = 0; i < gameSockets.length; i++) {
                     if (gameSockets[i].playerId == opponent) {
-                        gameInfo = game.getInfo(opponent);
                         gameSockets[i].emit("updateGame", gameInfo);
                         if (game.gameover) {
                             gameSockets[i].emit("gameover", getGameOverMsg(game, opponent));
@@ -381,11 +419,15 @@ io.on("connect", (socket) => {
                     if (game.standoff()) handleStandoff(game);
                 }, TIMEOUTMILLISECONDS);
                 break;
+            default:
+                gameInfo = game.getInfo(data.player);
+                emitToAllPlayerSockets(data.player, "updateGame", gameInfo);
         }
     });
 
     let handleStandoff = (game) => {
         console.log("STANDOFF!!");
+        if (game.stress()) return;
         if (game.player1.deck.length + game.player2.deck.length < 2) {
             game.stalemate = true;
             console.log("STALEMATE!!");
@@ -404,19 +446,24 @@ io.on("connect", (socket) => {
             }
             if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
             else game.nextFace(playerId);
-            gameInfo = game.getInfo(playerId);
             for (let s of mySockets) {
                 s.emit("wait", TIMEOUTMILLISECONDS);
             }
             setTimeout(() => {
+                let myGameInfo = game.getInfo(playerId);
+                console.log(myGameInfo);
+                emitToAllPlayerSockets(playerId, "updateGame", myGameInfo);
+                /*
                 for (let s of mySockets) {
                     s.emit("updateGame", gameInfo);
-                }    
-                game.waiting = false;
-                if (game.standoff()) handleStandoff(game);
+                }
+                */
+                game.waiting = false;   // ta bort? fyller ingen funktion?
             }, TIMEOUTMILLISECONDS);
         }
-
+        setTimeout(() => {
+            if (game.standoff()) handleStandoff(game);
+        }, TIMEOUTMILLISECONDS + 100);
     }
 
     let getSocketsById = (id) => {

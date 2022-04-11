@@ -13,7 +13,12 @@
         "***VS***": "vs.",
         "***QUIT***": "Quit",
         "***CONFIRM-QUIT***": "Abort game and exit?",
-        "***BACK***": "Back"
+        "***BACK***": "Back",
+        "GAMEOVER": "Game over!<br>",
+        "YOUHAVELOST": "You have lost!",
+        "YOUHAVEWON": "You have won!",
+        "ERRORGAMENOTFOUND": "ERROR: Could not find game!",
+        "GAMECANCELED": "The game has been canceled!"
     }
     },
     {"language": "sv",
@@ -30,7 +35,12 @@
         "***VS***": "mot",
         "***QUIT***": "Avsluta",
         "***CONFIRM-QUIT***": "Avbryt spelet och börja om?",
-        "***BACK***": "Tillbaka"
+        "***BACK***": "Tillbaka",
+        "GAMEOVER": "Spelet är slut!<br>",
+        "YOUHAVELOST": "Du har förlorat!",
+        "YOUHAVEWON": "Du har vunnit!",
+        "ERRORGAMENOTFOUND": "FEL: Kunde inte hitta spel!",
+        "GAMECANCELED": "Spelet har avslutats!"
     }
     }
 ]
