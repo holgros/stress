@@ -104,6 +104,7 @@ module.exports = class Game {
     }
 
     standoff = () => {
+        if (this.face1.length == 0 || this.face2.length == 0) return false;
         let face1Value = this.face1[this.face1.length-1].value;
         let face2Value = this.face2[this.face2.length-1].value;
         for (let playerVisible of [this.player1.visible, this.player2.visible]) {

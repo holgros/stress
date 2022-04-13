@@ -192,6 +192,7 @@ let getGamesIndexOverloaded = (id) => {
 // generera meddelande när spelet är slut
 let getGameOverMsg = (game, player) => {
     let lang = idLanguages[player];
+    delete idLanguages[data.player];
     lang = languageData.filter(function(item) {
         return item.language == lang;
     });
@@ -294,14 +295,16 @@ io.on("connect", (socket) => {
         if (gameId == undefined) socket.emit("error", {type: getErrorMsg(playerId, "ERROR-GAMENOTFOUND")});
         let game = games[gameId];
         let gameInfo = game.getInfo(playerId);
+        gameInfo.waiting = true;
+        game.waiting = true;
         socket.emit("updateGame", gameInfo);
-        if (game.face1.length + game.face2.length < 2 || game.standoff()) {
-            if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
-            else game.nextFace(playerId);
-        }
         gameInfo = game.getInfo(playerId);
         socket.emit("wait", TIMEOUTMILLISECONDS);
         setTimeout(() => {
+            if (game.face1.length + game.face2.length < 2 || game.standoff()) {
+                if (mock) game.nextFaces();     // TA BORT VID DEPLOYMENT
+                else game.nextFace(playerId);
+            }
             socket.emit("updateGame", gameInfo);
             game.waiting = false;
             if (game.standoff()) handleStandoff(game);
@@ -314,6 +317,7 @@ io.on("connect", (socket) => {
         let type = "GameNotFound";
         if (gameId == undefined) socket.emit("error", getErrorMsg(playerId, type));
         let game = games[gameId];
+        if (game.waiting) return;
         let gameInfo = game.getInfo(playerId);
         socket.emit("updateGame", gameInfo);
     });
@@ -325,6 +329,7 @@ io.on("connect", (socket) => {
         let gameId = getGamesIndexOverloaded(playerId);
         let game = games[gameId];
         game.canceled = true;
+        delete idLanguages[data.player];
     });
 
     // när någon har gjort något i spelet
@@ -345,6 +350,7 @@ io.on("connect", (socket) => {
             let type = "GameCanceled";
             emitToAllPlayerSockets(game.player1.name, "abortGame", {msg: getErrorMsg(game.player1.name, type)});
             emitToAllPlayerSockets(game.player2.name, "abortGame", {msg: getErrorMsg(game.player2.name, type)});
+            delete idLanguages[data.player];
             //socket.emit("abortGame", {msg: msg});
             return;
         }

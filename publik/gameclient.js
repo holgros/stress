@@ -111,8 +111,8 @@ window.onload = () => {
     socket.emit("startGame", id);
     
     socket.on("updateGame", (info) => {
-        console.log(info);
-        if (info.nbrFace1 == 0 || info.nbrFace2 == 0) {
+        //console.log(info);
+        if ((info.nbrFace1 == 0 || info.nbrFace2 == 0) && !info.waiting) {
             socket.emit("getGame", id);
             return;
         }
