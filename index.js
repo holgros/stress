@@ -192,7 +192,6 @@ let getGamesIndexOverloaded = (id) => {
 // generera meddelande när spelet är slut
 let getGameOverMsg = (game, player) => {
     let lang = idLanguages[player];
-    delete idLanguages[player];
     lang = languageData.filter(function(item) {
         return item.language == lang;
     });
@@ -233,19 +232,6 @@ let isPlayer = (id) => {
     }
     return false;
 }
-
-/*
-// Fisher-Yates (Knuth) algorithm
-let shuffle = (array) => {
-    let currentIndex = array.length,  randomIndex;
-    while (currentIndex != 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-    }
-    return array;
-}
-*/
 
 // socket-hanterare
 io.on("connect", (socket) => {
@@ -353,7 +339,6 @@ io.on("connect", (socket) => {
             emitToAllPlayerSockets(game.player1.name, "abortGame", {msg: getErrorMsg(game.player1.name, type)});
             emitToAllPlayerSockets(game.player2.name, "abortGame", {msg: getErrorMsg(game.player2.name, type)});
             delete idLanguages[data.player];
-            //socket.emit("abortGame", {msg: msg});
             return;
         }
         let typeOfMove = game.getTypeOfMove(data);
@@ -363,13 +348,6 @@ io.on("connect", (socket) => {
         switch(typeOfMove) {
             case "standard move":
                 game.moveCards(data);
-                
-                /* MOCK
-                console.log("Mocking stress...");
-                game.face1.push({suit: "H", value: 0, unicode: "&#x1F0B1"})
-                game.face2.push({suit: "S", value: 0, unicode: "&#x1F0A1"})
-                */
-                
                 gameInfo = game.getInfo(data.player);
                 if (game.player1.visible.length == 0 || game.player2.visible.length == 0) {
                     gameInfo.gameover = true;
@@ -417,9 +395,9 @@ io.on("connect", (socket) => {
                 emitToAllPlayerSockets(opponent, "updateGame", gameInfo);
                 emitToAllPlayerSockets(data.player, "wait", TIMEOUTMILLISECONDS);
                 emitToAllPlayerSockets(opponent, "wait", TIMEOUTMILLISECONDS);
-                game.nextFace(data.player);
-                game.nextFace(opponent);
                 setTimeout(() => {
+                    game.nextFace(data.player);
+                    game.nextFace(opponent);
                     gameInfo = game.getInfo(data.player);                
                     emitToAllPlayerSockets(data.player, "updateGame", gameInfo);
                     gameInfo = game.getInfo(opponent);
@@ -459,13 +437,7 @@ io.on("connect", (socket) => {
             }
             setTimeout(() => {
                 let myGameInfo = game.getInfo(playerId);
-                console.log(myGameInfo);
                 emitToAllPlayerSockets(playerId, "updateGame", myGameInfo);
-                /*
-                for (let s of mySockets) {
-                    s.emit("updateGame", gameInfo);
-                }
-                */
                 game.waiting = false;   // ta bort? fyller ingen funktion?
             }, TIMEOUTMILLISECONDS);
         }

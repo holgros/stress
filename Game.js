@@ -208,10 +208,10 @@ module.exports = class Game {
             opponentDeck = this.player1.deck;
             opponentVisible = this.player1.visible;
         }
-        for (let i = 0; i < face1.length; i++) {
+        while (face1.length > 0) {
             opponentDeck.push(face1.pop());
         }
-        for (let i = 0; i < face2.length; i++) {
+        while (face2.length > 0) {
             opponentDeck.push(face2.pop());
         }
         opponentDeck = shuffle(opponentDeck);
