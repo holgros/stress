@@ -192,7 +192,7 @@ let getGamesIndexOverloaded = (id) => {
 // generera meddelande när spelet är slut
 let getGameOverMsg = (game, player) => {
     let lang = idLanguages[player];
-    delete idLanguages[data.player];
+    delete idLanguages[player];
     lang = languageData.filter(function(item) {
         return item.language == lang;
     });

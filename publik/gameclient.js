@@ -66,16 +66,46 @@ window.onload = () => {
                     deck: hovering
                 };
                 socket.emit("playerMove", data);
-            } 
+            }
+            // återställa ifall det är en touch-händelse som inte lyssnar på mouseout
+            for (let face of ["face1", "face2"]) {
+                let faceDiv = document.getElementById(face);
+                faceDiv.style.color = "black";
+            }
         }
         selected = undefined;
     }
 
+    let touchmovehandler = (e) => {
+        for (let face of ["face1", "face2"]) {
+            let faceDiv = document.getElementById(face);
+            domRect = faceDiv.getBoundingClientRect();
+            //alert("x:" + domRect.x + ",y:" + domRect.y + ",width:" + domRect.width + ",height:" + domRect.height);
+            let x = e.touches[0].pageX;
+            let y = e.touches[0].pageY;
+            if (x < domRect.x+domRect.width && x > domRect.x) {
+                if (y < domRect.y+domRect.height && y > domRect.y) {
+                    // kopia från motsvarande händelsehanterare för mus
+                    if (!selected) return;
+                    hovering = Number(face.substring(4));   // 1 eller 2
+                    let hoveringCard = deck1topCard;
+                    if (hovering == 2) hoveringCard = deck2topCard;
+                    if(Math.abs(selected[0].value - hoveringCard.value) % 11 != 1) return;
+                    // OBS - skillnad från händelsehanterare för mus
+                    faceDiv.style.color = "red";
+                }
+            }
+        }
+    }
+
     window.addEventListener("mouseup", mouseuphandler);
+    window.addEventListener("touchend", mouseuphandler);
+    window.addEventListener("touchmove", touchmovehandler);
 
     for (let i = 0; i < 4; i++) {
         let faceDiv = document.getElementById("faceCard"+i);
         faceDiv.addEventListener("mousedown", faceCardMousedownHandler);
+        faceDiv.addEventListener("touchstart", faceCardMousedownHandler);
     }
 
     for (let face of ["face1", "face2"]) {
@@ -198,13 +228,6 @@ window.onload = () => {
     socket.on("stalemate", () => {
         stalemate = true;
     });
-
-    /*
-    socket.on("claim", (data) => {
-        alert("Claimed: " + data);
-        // TODO: hantera claim
-    });
-    */
 
 };
 
