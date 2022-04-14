@@ -329,7 +329,7 @@ io.on("connect", (socket) => {
         let gameId = getGamesIndexOverloaded(playerId);
         let game = games[gameId];
         if (game) game.canceled = true;
-        delete idLanguages[data.player];
+        delete idLanguages[playerId];
     });
 
     // när någon har gjort något i spelet
@@ -340,6 +340,7 @@ io.on("connect", (socket) => {
         let gameInfo;
         if (game.gameover) {
             gameInfo = game.getInfo(data.player);
+            gameInfo.gameover = true;
             socket.emit("updateGame", gameInfo);
             return;
         }
