@@ -328,7 +328,7 @@ io.on("connect", (socket) => {
         // ta bort spelet och meddela motspelaren
         let gameId = getGamesIndexOverloaded(playerId);
         let game = games[gameId];
-        game.canceled = true;
+        if (game) game.canceled = true;
         delete idLanguages[data.player];
     });
 
