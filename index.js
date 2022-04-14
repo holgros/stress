@@ -209,6 +209,7 @@ let getGameOverMsg = (game, player) => {
 // generera felmeddelande
 let getErrorMsg = (player, type) => {
     let lang = idLanguages[player];
+    if (!lang) lang = DEFAULT_LANGUAGE;
     lang = languageData.filter(function(item) {
         return item.language == lang;
     });
