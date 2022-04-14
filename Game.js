@@ -183,14 +183,16 @@ module.exports = class Game {
             playerVisible = this.player2.visible;
             opponentVisible = this.player1.visible;
         }
-        for (let i = 0; i < playerFace.length; i++) {
+        while (playerFace.length > 0) {
+        //for (let i = 0; i < playerFace.length; i++) {
             playerDeck.push(playerFace.pop());
         }
         playerDeck = shuffle(playerDeck);
         while (this.lessThanFourIdenticals(playerVisible) && playerDeck.length > 0) {
             playerVisible.push(playerDeck.pop());
         }
-        for (let i = 0; i < opponentFace.length; i++) {
+        while (opponentFace.length > 0) {
+        //for (let i = 0; i < opponentFace.length; i++) {
             opponentDeck.push(opponentFace.pop());
         }
         opponentDeck = shuffle(opponentDeck);
